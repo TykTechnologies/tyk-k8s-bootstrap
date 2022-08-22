@@ -7,10 +7,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"os"
 	"strings"
 	"time"
-	"tyk/tyk/bootstrap/constants"
+	"tyk/tyk/bootstrap/data"
 )
 
 func CheckIfDeploymentsAreReady() error {
@@ -24,7 +23,7 @@ func CheckIfDeploymentsAreReady() error {
 		return err
 	}
 
-	pods, err := clientset.CoreV1().Pods(os.Getenv(constants.TykPodNamespaceEnvVarName)).
+	pods, err := clientset.CoreV1().Pods(data.AppConfig.TykPodNamespace).
 		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -38,7 +37,7 @@ func CheckIfDeploymentsAreReady() error {
 		if attemptCount > 180 {
 			return errors.New("attempted readiness check too many times")
 		}
-		pods, err = clientset.CoreV1().Pods(os.Getenv(constants.TykPodNamespaceEnvVarName)).
+		pods, err = clientset.CoreV1().Pods(data.AppConfig.TykPodNamespace).
 			List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return err

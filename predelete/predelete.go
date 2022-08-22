@@ -7,7 +7,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"os"
-	"tyk/tyk/bootstrap/constants"
+	"tyk/tyk/bootstrap/data"
 )
 
 //maybe not needed?
@@ -63,7 +63,7 @@ func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
 }
 
 func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
-	jobs, err := clientset.BatchV1().Jobs(os.Getenv(constants.TykPodNamespaceEnvVarName)).
+	jobs, err := clientset.BatchV1().Jobs(data.AppConfig.TykPodNamespace).
 		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -72,7 +72,7 @@ func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
 	found := false
 	for _, value := range jobs.Items {
 		if value.Name == os.Getenv("BOOTSTRAP_JOB_NAME") {
-			err = clientset.BatchV1().Jobs(os.Getenv(constants.TykPodNamespaceEnvVarName)).
+			err = clientset.BatchV1().Jobs(data.AppConfig.TykPodNamespace).
 				Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
 			if err != nil {
 				return err
