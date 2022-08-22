@@ -1,0 +1,74 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bootstrap-delployment
+  namespace: tyk
+  labels:
+    app: bootstrap
+spec:
+  template:
+    metadata:
+      labels:
+        app: bootstrap
+    spec:
+      restartPolicy: Never
+      serviceAccountName: k8s-bootstrap-role
+      containers:
+        - name: bootstrap-tyk
+          image: localhost:5001/bootstrap-tyk:0.31
+          command: ['./app/bin/bootstrap-app']
+          env:
+            - name: TYK_ADMIN_FIRST_NAME
+#              value: { { .Values.dash.adminUser.firstName | quote } }
+              value: admin-name
+
+            - name: TYK_ADMIN_LAST_NAME
+#              value: { { .Values.dash.adminUser.lastName | quote } }
+
+              value: admin-last-name
+            - name: TYK_ADMIN_EMAIL
+#              value: { { .Values.dash.adminUser.email | quote } }
+              value: tyk-admin@tyk.io
+
+            - name: TYK_ADMIN_PASSWORD
+#              valueFrom:
+#                secretKeyRef:
+##                  name: { { .Release.Name } }-login-details
+#                  name: tyk-pro-login-details
+#                  key: TYK_PASS
+              value: pass123and
+            - name: TYK_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: TYK_DASHBOARD_PROTO
+              value: http
+            - name: TYK_DASHBOARD_SVC
+              value: dashboard-svc-tyk-pro
+            - name: TYK_DB_LISTENPORT
+              value: "3000"
+            - name: TYK_DB_LICENSEKEY
+              value: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbGxvd2VkX25vZGVzIjoiMTYzOTVkYjktY2U3OS00YjhlLTY0ZGYtZWQ1Yjg5MDJlYzBjLDY4N2U0YmIxLWI1NzItNDM4YS00NDkzLTQzMDE4MjAyODM5NywwNTFiOTlkYS1iY2MyLTQ0ZjYtNThjMS1kZjRkMGMzYzcxMzQsYWJiMWY0ZDgtNjBiOS00MjY0LTRiMWItNGMxMTg1ZjE4MjZkLGZmMWQ0YTUzLTZmODEtNDdiZi01N2U3LWNkMzZjMGYyODMwYSw1MjE0NTYwYi1lNjY4LTRhNDctNGI3NS03ZjZlNGZkZjkzNjAsZmM2ZWJkZjQtMDI0Yi00OGM1LTU1ZGYtZTMyODM1NDJlNThhLGJjNmMzNzRkLTQyOWEtNDM1OS03MDczLTU2NTEwYjZhMmI2ZCxkYTkyODhmYi05ZGJmLTRjZjItNDkzNy1mNGZhNzI3YmExMWMsYmNiOWU3ODYtMmJjZi00MGM2LTczOGUtZDUxZDQ4ZGQ0OWUxIiwiZXhwIjoxNjYzNzEyMDE2LCJpYXQiOjE2NjExMjAwMTYsIm93bmVyIjoiNjIwZDM4ZTRhY2QwM2YwMDAxZGYzNTc1Iiwic2NvcGUiOiJtdWx0aV90ZWFtLHJiYWMsZ3JhcGgsZmVkZXJhdGlvbiIsInYiOiIyIn0.SHIKFqdRUTnnWFRmIF9VYPmWds35Z7Y7yJImKGm49VvIpnoMGypILIEUOtUOfdf3oqoK5gtFnG0o09uy7IJs4ZtpGYBJyAZSznbOiVGMbLDTuX9vuif5Le8NkK2iwN0s6rrM29NA7vkalrXKlpJPojVy0q61S2C5-zsI79rwx_SkP2tgVVBL8PC6TOWXIItlAi4PpJGL8R7EnCapgBIocftrwSUTUvi-tkf0Qse4HmMZTv7xWYxhZRVlNzsExUjJzZ211Sn-Rir63sl-sNfjGyoWwwo8RJ1Jjv95ftieRanJsJeFJAPY3cz0PF55qdagTlm-1jNByWE1dUS5Q8IpVg"
+            - name: TYK_ADMIN_SECRET
+              value: "12345"
+            - name: TYK_ORG_NAME
+              value: Default name
+            - name: TYK_ORG_CNAME
+              value: tyk-portal.local
+
+            - name: DASHBOARD_ENABLED
+              value: "true"
+
+            - name: OPERATOR_SECRET_ENABLED
+              value: "true"
+            - name: OPERATOR_SECRET_NAME
+              value: "tyk-operator-conf"
+            - name: BOOTSTRAP_DASHBOARD
+              value: "true"
+            - name: GATEWAY_ADDRESS
+              value: http://gateway-svc-tyk-pro.tyk.svc.cluster.local:8080
+            - name: BOOTSTRAP_PORTAL
+              value: "true"
+            - name: TYK_DASHBOARD_DEPLOY
+              value: dashboard-tyk-pro
+
