@@ -2,6 +2,7 @@ package readiness
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -9,22 +10,24 @@ import (
 	"os"
 	"strings"
 	"time"
+	"tyk/tyk/bootstrap/constants"
 )
 
-func CheckIfDeploymentsAreReady() bool {
+func CheckIfDeploymentsAreReady() error {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
-	pods, err := clientset.CoreV1().Pods(os.Getenv("TYK_POD_NAMESPACE")).List(context.TODO(), metav1.ListOptions{})
+	pods, err := clientset.CoreV1().Pods(os.Getenv(constants.TykPodNamespaceEnvVarName)).
+		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	time.Sleep(5 * time.Second)
@@ -33,11 +36,12 @@ func CheckIfDeploymentsAreReady() bool {
 	for {
 		attemptCount++
 		if attemptCount > 180 {
-			return false
+			return errors.New("attempted readiness check too many times")
 		}
-		pods, err = clientset.CoreV1().Pods(os.Getenv("TYK_POD_NAMESPACE")).List(context.TODO(), metav1.ListOptions{})
+		pods, err = clientset.CoreV1().Pods(os.Getenv(constants.TykPodNamespaceEnvVarName)).
+			List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
-			panic(err.Error())
+			return err
 		}
 		fmt.Printf("There are %d other pods in the cluster\n", len(pods.Items)-1)
 		var containerReady int
@@ -58,10 +62,10 @@ func CheckIfDeploymentsAreReady() bool {
 		fmt.Printf("Total containers: %v\n", totalContainers)
 
 		if containerReady != totalContainers {
-			fmt.Println("NOT READY")
+			fmt.Println("TYK PRO IS NOT READY")
 		} else {
 			fmt.Println("TYK PRO IS READY TO BE BOOTSTRAPPED")
-			return true
+			return nil
 		}
 		time.Sleep(2 * time.Second)
 	}

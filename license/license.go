@@ -12,13 +12,13 @@ import (
 
 const TykDashboardLicenseEnvVarName = "TYK_DB_LICENSEKEY"
 
-func GetDashboardLicense() (string, bool) {
+func GetDashboardLicense() (string, error) {
 	license, ok := os.LookupEnv(TykDashboardLicenseEnvVarName)
 	fmt.Println(license)
 	if !ok {
-		return "", false
+		return "", errors.New("license env var is not present")
 	}
-	return license, true
+	return license, nil
 }
 
 func ValidateDashboardLicense(license string) (bool, error) {

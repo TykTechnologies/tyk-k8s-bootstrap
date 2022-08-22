@@ -14,32 +14,43 @@ import (
 	"net/http"
 	"os"
 	"time"
-	"tyk/tyk/bootstrap/appdata"
+	"tyk/tyk/bootstrap/constants"
+	"tyk/tyk/bootstrap/data"
 )
 
-func CheckForExistingOrganisation(client http.Client, dashboardUrl string) error {
-	orgsApi := dashboardUrl + "/admin/organisations"
-	fmt.Println(orgsApi)
-	fmt.Println("+++check above")
-	req, err := http.NewRequest("GET", orgsApi, nil)
+const AdminOrganisationsEndpoint = "/admin/organisations"
+const ApiUsersActionsResetEndpoint = "%s/api/users/%s/actions/reset"
+const ApiPortalCatalogueEndpoint = "/api/portal/catalogue"
+const ApiPortalPagesEndpoint = "/api/portal/pages"
+const ApiPortalConfigurationEndpoint = "/api/portal/configuration"
+
+const TykModePro = "pro"
+
+const TykAuth = "TYK_AUTH"
+const TykOrg = "TYK_ORG"
+const TykMode = "TYK_MODE"
+const TykUrl = "TYK_URL"
+
+func CheckForExistingOrganisation(client http.Client) error {
+	fmt.Println("Checking for existing organisations")
+
+	orgsApiEndpoint := data.AppConfig.DashboardUrl + AdminOrganisationsEndpoint
+	req, err := http.NewRequest("GET", orgsApiEndpoint, nil)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("admin-auth", appdata.Config.TykAdminSecret)
+	req.Header.Set("admin-auth", data.AppConfig.TykAdminSecret)
 	req.Header.Set("Content-Type", "application/json")
 	res, err := client.Do(req)
 	if err != nil {
 		return err
 	}
-	fmt.Println("____status code 2 blow________")
 
-	fmt.Println(res.StatusCode)
 	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println(err)
 	}
 	bodyString := string(bodyBytes)
-	fmt.Println("____BODYSTRING  2 BELOW________")
 	fmt.Println(bodyString)
 
 	orgs := OrgResponse{}
@@ -49,14 +60,15 @@ func CheckForExistingOrganisation(client http.Client, dashboardUrl string) error
 	}
 	if len(orgs.Organisations) > 0 {
 		for _, organisation := range orgs.Organisations {
-			if organisation["owner_name"] == appdata.Config.CurrentOrgName ||
-				organisation["cname"] == appdata.Config.Cname {
-				return errors.New("there shouldn't be any orgs, please disable bootstraping to avoid losing data or delete" +
+			if organisation["owner_name"] == data.AppConfig.CurrentOrgName ||
+				organisation["cname"] == data.AppConfig.Cname {
+				return errors.New("there shouldn't be any organisations, please " +
+					"disable bootstrapping to avoid losing data or delete" +
 					"already existing organisations")
 			}
 		}
 	} else {
-		fmt.Println("no orgs, all ok")
+		fmt.Println("No organisations have been detected, we can proceed")
 		return nil
 	}
 	return nil
@@ -83,14 +95,18 @@ type ResetPasswordStruct struct {
 
 func SetUserPassword(client http.Client, userId string, authCode string, dashboardUrl string) error {
 	newPasswordData := ResetPasswordStruct{
-		NewPassword:     appdata.Config.TykAdminPassword,
+		NewPassword:     data.AppConfig.TykAdminPassword,
 		UserPermissions: map[string]string{"IsAdmin": "admin"},
 	}
 	reqBody, err := json.Marshal(newPasswordData)
 	if err != nil {
 		return err
 	}
-	req, _ := http.NewRequest("POST", dashboardUrl+"/api/users/"+userId+"/actions/reset", bytes.NewReader(reqBody))
+
+	req, _ := http.NewRequest(
+		"POST",
+		fmt.Sprintf(ApiUsersActionsResetEndpoint, dashboardUrl, userId),
+		bytes.NewReader(reqBody))
 	req.Header.Set("authorization", authCode)
 	req.Header.Set("Content-Type", "application/json")
 	res, err := client.Do(req)
@@ -103,36 +119,36 @@ func SetUserPassword(client http.Client, userId string, authCode string, dashboa
 	return nil
 }
 
-func GenerateCredentials(client http.Client, dashBoardUrl string) error {
-	orgId, err := CreateOrganisation(client, dashBoardUrl)
+func GenerateCredentials(client http.Client) error {
+	orgId, err := CreateOrganisation(client, data.AppConfig.DashboardUrl)
 	if err != nil {
 		return err
 	}
 
-	appdata.Config.OrgId = orgId
+	data.AppConfig.OrgId = orgId
 
-	userAuth, err := CreateUser(client, dashBoardUrl, orgId)
+	userAuth, err := CreateUser(client, data.AppConfig.DashboardUrl, orgId)
 	if err != nil {
 		return err
 	}
 
-	appdata.Config.UserAuth = userAuth
+	data.AppConfig.UserAuth = userAuth
 
 	return nil
 }
 
-func BoostrapPortal(client http.Client, dashboardUrl string) error {
-	err := CreatePortalDefaultSettings(client, dashboardUrl)
+func BoostrapPortal(client http.Client) error {
+	err := CreatePortalDefaultSettings(client)
 	if err != nil {
 		return err
 	}
 
-	err = InitialiseCatalogue(client, dashboardUrl)
+	err = InitialiseCatalogue(client)
 	if err != nil {
 		return err
 	}
 
-	err = CreatePortalHomepage(client, dashboardUrl)
+	err = CreatePortalHomepage(client)
 	if err != nil {
 		return err
 	}
@@ -146,16 +162,17 @@ type InitCatalogReq struct {
 	OrgId string `json:"org_id"`
 }
 
-func InitialiseCatalogue(client http.Client, dashboardUrl string) error {
+func InitialiseCatalogue(client http.Client) error {
 	fmt.Println("Initialising Catalogue")
-	initCatalog := InitCatalogReq{OrgId: appdata.Config.OrgId}
+
+	initCatalog := InitCatalogReq{OrgId: data.AppConfig.OrgId}
 	reqBody, err := json.Marshal(initCatalog)
 	if err != nil {
 		return err
 	}
 	reqData := bytes.NewReader(reqBody)
-	req, err := http.NewRequest("POST", dashboardUrl+"/api/portal/catalogue", reqData)
-	req.Header.Set("Authorization", appdata.Config.UserAuth)
+	req, err := http.NewRequest("POST", data.AppConfig.DashboardUrl+ApiPortalCatalogueEndpoint, reqData)
+	req.Header.Set("Authorization", data.AppConfig.UserAuth)
 	if err != nil {
 		return err
 	}
@@ -172,22 +189,23 @@ func InitialiseCatalogue(client http.Client, dashboardUrl string) error {
 	if err != nil {
 		return err
 	}
-	appdata.Config.CatalogId = resp.Message
+	data.AppConfig.CatalogId = resp.Message
 
 	fmt.Println(string(bodyBytes))
 	return nil
 }
 
-func CreatePortalHomepage(client http.Client, dashboardUrl string) error {
+func CreatePortalHomepage(client http.Client) error {
 	fmt.Println("Creating portal homepage")
+
 	homepageContents := GetPortalHomepage()
 	reqBody, err := json.Marshal(homepageContents)
 	if err != nil {
 		return err
 	}
 	reqData := bytes.NewReader(reqBody)
-	req, err := http.NewRequest("POST", dashboardUrl+"/api/portal/pages", reqData)
-	req.Header.Set("Authorization", appdata.Config.UserAuth)
+	req, err := http.NewRequest("POST", data.AppConfig.DashboardUrl+ApiPortalPagesEndpoint, reqData)
+	req.Header.Set("Authorization", data.AppConfig.UserAuth)
 	if err != nil {
 		return err
 	}
@@ -267,10 +285,11 @@ type PortalFields struct {
 	PanelTwoTitle       string `json:"PanelTwoTitle"`
 }
 
-func CreatePortalDefaultSettings(client http.Client, dashboardUrl string) error {
+func CreatePortalDefaultSettings(client http.Client) error {
 	fmt.Println("Creating bootstrap default settings")
-	req, err := http.NewRequest("POST", dashboardUrl+"/api/portal/configuration", nil)
-	req.Header.Set("Authorization", appdata.Config.UserAuth)
+
+	req, err := http.NewRequest("POST", data.AppConfig.DashboardUrl+ApiPortalConfigurationEndpoint, nil)
+	req.Header.Set("Authorization", data.AppConfig.UserAuth)
 
 	if err != nil {
 		return err
@@ -331,9 +350,9 @@ type NeededUserData struct {
 func GetUserData(client http.Client, dashboardUrl string, orgId string) (NeededUserData, error) {
 	reqBody := CreateUserRequest{
 		OrganisationId:  orgId,
-		FirstName:       appdata.Config.TykAdminFirstName,
-		LastName:        appdata.Config.TykAdminLastName,
-		EmailAddress:    appdata.Config.TykAdminEmailAddress,
+		FirstName:       data.AppConfig.TykAdminFirstName,
+		LastName:        data.AppConfig.TykAdminLastName,
+		EmailAddress:    data.AppConfig.TykAdminEmailAddress,
 		Active:          true,
 		UserPermissions: map[string]string{"IsAdmin": "admin"},
 	}
@@ -344,14 +363,12 @@ func GetUserData(client http.Client, dashboardUrl string, orgId string) (NeededU
 	reqData := bytes.NewReader(reqBytes)
 	req, err := http.NewRequest("POST", dashboardUrl+"/admin/users", reqData)
 
-	req.Header.Set("admin-auth", appdata.Config.TykAdminSecret)
+	req.Header.Set("admin-auth", data.AppConfig.TykAdminSecret)
 	req.Header.Set("Content-Type", "application/json")
 	res, err := client.Do(req)
 	if err != nil {
 		return NeededUserData{}, err
 	}
-
-	fmt.Println("____status code 4 blow________")
 
 	fmt.Println(res.StatusCode)
 	bodyBytes, err := io.ReadAll(res.Body)
@@ -359,7 +376,6 @@ func GetUserData(client http.Client, dashboardUrl string, orgId string) (NeededU
 		fmt.Println(err)
 	}
 	bodyString := string(bodyBytes)
-	fmt.Println("____BODYSTRING  4 BELOW________")
 	fmt.Println(bodyString)
 
 	getUserResponse := CreateUserResponse{}
@@ -378,34 +394,31 @@ type CreateOrgStruct struct {
 
 func CreateOrganisation(client http.Client, dashBoardUrl string) (string, error) {
 	createOrgData := CreateOrgStruct{
-		OwnerName:    appdata.Config.CurrentOrgName,
+		OwnerName:    data.AppConfig.CurrentOrgName,
 		CnameEnabled: true,
-		Cname:        appdata.Config.Cname,
+		Cname:        data.AppConfig.Cname,
 	}
 	reqBodyBytes, err := json.Marshal(createOrgData)
 	if err != nil {
 		return "", err
 	}
 	reqBody := bytes.NewReader(reqBodyBytes)
-	req, err := http.NewRequest("POST", dashBoardUrl+"/admin/organisations", reqBody)
+	req, err := http.NewRequest("POST", dashBoardUrl+AdminOrganisationsEndpoint, reqBody)
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("admin-auth", appdata.Config.TykAdminSecret)
+	req.Header.Set("admin-auth", data.AppConfig.TykAdminSecret)
 	req.Header.Set("Content-Type", "application/json")
 	res, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
-	fmt.Println("____status code 3 blow________")
 
-	fmt.Println(res.StatusCode)
 	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println(err)
 	}
 	bodyString := string(bodyBytes)
-	fmt.Println("____BODYSTRING  3 BELOW________")
 	fmt.Println(bodyString)
 
 	createOrgResponse := DashboardGeneralResponse{}
@@ -439,15 +452,17 @@ func BootstrapTykOperatorSecret() error {
 		return err
 	}
 
-	secrets, err := clientset.CoreV1().Secrets(os.Getenv("TYK_POD_NAMESPACE")).List(context.TODO(), metav1.ListOptions{})
+	secrets, err := clientset.CoreV1().Secrets(os.Getenv(constants.TykPodNamespaceEnvVarName)).
+		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
 
 	found := false
 	for _, value := range secrets.Items {
-		if value.Name == os.Getenv("OPERATOR_SECRET_NAME") {
-			err = clientset.CoreV1().Secrets(os.Getenv("TYK_POD_NAMESPACE")).Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
+		if value.Name == os.Getenv(constants.OperatorSecretNameEnvVarName) {
+			err = clientset.CoreV1().Secrets(os.Getenv(constants.TykPodNamespaceEnvVarName)).
+				Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
 			if err != nil {
 				return err
 			}
@@ -470,22 +485,23 @@ func BootstrapTykOperatorSecret() error {
 
 func CreateTykOperatorSecret(clientset *kubernetes.Clientset) error {
 	secretData := map[string][]byte{
-		"TYK_AUTH": []byte(appdata.Config.UserAuth),
-		"TYK_ORG":  []byte(appdata.Config.OrgId),
-		"TYK_MODE": []byte("pro"),
-		"TYK_URL":  []byte(appdata.Config.DashboardUrl),
+		TykAuth: []byte(data.AppConfig.UserAuth),
+		TykOrg:  []byte(data.AppConfig.OrgId),
+		TykMode: []byte(TykModePro),
+		TykUrl:  []byte(data.AppConfig.DashboardUrl),
 	}
 
-	objectMeta := metav1.ObjectMeta{Name: os.Getenv("OPERATOR_SECRET_NAME")}
+	objectMeta := metav1.ObjectMeta{Name: os.Getenv(constants.OperatorSecretNameEnvVarName)}
 
 	secret := v1.Secret{
 		ObjectMeta: objectMeta,
 		Data:       secretData,
 	}
-	createdSecret, err := clientset.CoreV1().Secrets(os.Getenv("TYK_POD_NAMESPACE")).Create(context.TODO(), &secret, metav1.CreateOptions{})
+	_, err := clientset.CoreV1().Secrets(os.Getenv(constants.TykPodNamespaceEnvVarName)).
+		Create(context.TODO(), &secret, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
-	fmt.Println(createdSecret)
+
 	return nil
 }

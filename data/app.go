@@ -1,6 +1,8 @@
-package appdata
+package data
 
-type AppArg struct {
+import "fmt"
+
+type AppArguments struct {
 	DashboardHost        string
 	DashboardPort        int
 	DashBoardLicense     string
@@ -17,7 +19,7 @@ type AppArg struct {
 	DashboardUrl         string
 }
 
-var Config = AppArg{
+var AppConfig = AppArguments{
 	DashboardHost:        "",
 	DashboardPort:        3000,
 	DashBoardLicense:     "",
@@ -27,9 +29,15 @@ var Config = AppArg{
 	TykAdminPassword:     "123456",
 	TykAdminFirstName:    "andrei",
 	TykAdminEmailAddress: "andrei@tyk.io",
-	TykAdminLastName:     "psk",
+	TykAdminLastName:     "ierdna",
 	UserAuth:             "",
 	OrgId:                "",
 	CatalogId:            "",
 	DashboardUrl:         "",
+}
+
+func InitAppData() {
+	dashAddress := "dashboard-svc-tyk-pro.tyk.svc.cluster.local"
+	dashUrl := "http://" + dashAddress + fmt.Sprintf(":%v", AppConfig.DashboardPort)
+	AppConfig.DashboardUrl = dashUrl
 }

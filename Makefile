@@ -1,5 +1,4 @@
 GO_ARG_LINUX=GOOS=linux GOARCH=amd64
-GO_ARG_MAC=GOOS=darwin GOARCH=amd64
 
 SRC_PATH?=$(shell pwd)
 BIN_PATH?=$(SRC_PATH)/bin
