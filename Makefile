@@ -19,3 +19,4 @@ build-bootstrap-pre-delete:
 	env $(GO_ARG_LINUX) CGO_ENABLED=0 go build -v -o "$(BIN_PATH)/$(BOOTSTRAP_APP_PATH)$(BOOTSTRAP_APP_PREDELETE_NAME)" -ldflags \
 		"-X main.version=$(MAIN_VERSION)" "$(BOOTSTRAP_CMD_PREDELETE_PATH)"
 
+build-all: build-bootstrap-post build-bootstrap-pre-delete
