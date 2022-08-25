@@ -10,7 +10,7 @@ import (
 	"tyk/tyk/bootstrap/data"
 )
 
-//maybe not needed?
+// maybe not needed?
 func ExecutePreDeleteOperations() error {
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -23,6 +23,11 @@ func ExecutePreDeleteOperations() error {
 	}
 
 	err = PreDeleteOperatorSecret(clientset)
+	if err != nil {
+		return err
+	}
+
+	err = PreDeleteEnterprisePortalSecret(clientset)
 	if err != nil {
 		return err
 	}
@@ -58,6 +63,33 @@ func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
 		fmt.Println("A previously created operator secret has not been identified")
 	} else {
 		fmt.Println("A previously created operator secret was identified and deleted")
+	}
+	return nil
+}
+
+func PreDeleteEnterprisePortalSecret(clientset *kubernetes.Clientset) error {
+	fmt.Println("Running pre delete hook")
+	secrets, err := clientset.CoreV1().Secrets(os.Getenv("TYK_POD_NAMESPACE")).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	found := false
+	for _, value := range secrets.Items {
+		if value.Name == os.Getenv("ENTERPRISE_PORTAL_SECRET_NAME") {
+			err = clientset.CoreV1().Secrets(os.Getenv("TYK_POD_NAMESPACE")).Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
+			if err != nil {
+				return err
+			}
+			found = true
+			break
+		}
+	}
+
+	if found == false {
+		fmt.Println("A previously created enterprise portal secret has not been identified")
+	} else {
+		fmt.Println("A previously created enterprise portal secret was identified and deleted")
 	}
 	return nil
 }
