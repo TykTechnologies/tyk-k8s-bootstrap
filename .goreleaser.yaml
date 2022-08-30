@@ -1,0 +1,54 @@
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+# https://goreleaser.com/customization/checksum/
+checksum:
+  disable: false
+
+# https://goreleaser.com/customization/build/
+builds:
+  -
+    id: "post"
+    main: ./cmd/bootstrap-post
+    binary: bin/bootstrapapp-post
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -X main.version={{.Version}}
+    goarch:
+      - amd64
+    goos:
+      - linux
+  - id: "pre"
+    main: ./cmd/bootstrap-pre-delete
+    binary: bin/bootstrapapp-pre-delete
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -X main.version={{.Version}}
+    goarch:
+      - amd64
+    goos:
+      - linux
+
+
+# https://goreleaser.com/customization/docker/
+dockers:
+  -
+    id: "post"
+    image_templates:
+    - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}"
+    - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}.{{ .Minor }}"
+    - "tykio/tyk-k8s-bootstrap-post:{{ .Tag }}"
+    dockerfile: ".container/image/bootstrap-post/Dockerfile"
+  -
+    id: "pre"
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}"
+      - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}.{{ .Minor }}"
+      - "tykio/tyk-k8s-bootstrap-pre-delete:{{ .Tag }}"
+    dockerfile: ".container/image/bootstrap-pre-delete/Dockerfile"
