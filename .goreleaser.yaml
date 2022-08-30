@@ -15,6 +15,10 @@ builds:
     id: "post"
     main: ./cmd/bootstrap-post
     binary: bin/bootstrapapp-post
+    goos:
+      - linux
+    goarch:
+      - amd64
     env:
       - CGO_ENABLED=0
     ldflags:
@@ -22,6 +26,10 @@ builds:
   - id: "pre"
     main: ./cmd/bootstrap-pre-delete
     binary: bin/bootstrapapp-pre-delete
+    goos:
+      - linux
+    goarch:
+      - amd64
     env:
       - CGO_ENABLED=0
     ldflags:
@@ -31,16 +39,18 @@ builds:
 # https://goreleaser.com/customization/docker/
 dockers:
   -
-    id: "post"
+    ids:
+    - post
     image_templates:
     - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}"
     - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}.{{ .Minor }}"
     - "tykio/tyk-k8s-bootstrap-post:{{ .Tag }}"
-    dockerfile: ".container/image/bootstrap-post/Dockerfile"
     goos: linux
     goarch: amd64
+    dockerfile: ".container/image/bootstrap-post/Dockerfile"
   -
-    id: "pre"
+    ids:
+    - pre
     image_templates:
       - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}"
       - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}.{{ .Minor }}"
@@ -48,3 +58,4 @@ dockers:
     dockerfile: ".container/image/bootstrap-pre-delete/Dockerfile"
     goos: linux
     goarch: amd64
+  

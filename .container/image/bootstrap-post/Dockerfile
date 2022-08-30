@@ -1,3 +1,3 @@
 FROM scratch
 
-ADD bin/bootstrapapp-post /app/bin/bootstrap-app-post
+ADD bootstrapapp-post /app/bin/bootstrap-app-post
