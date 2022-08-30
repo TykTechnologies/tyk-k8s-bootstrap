@@ -42,6 +42,7 @@ dockers:
     ids:
     - post
     image_templates:
+    - "tykio/tyk-k8s-bootstrap-post:latest"
     - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}"
     - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}.{{ .Minor }}"
     - "tykio/tyk-k8s-bootstrap-post:{{ .Tag }}"
@@ -52,6 +53,7 @@ dockers:
     ids:
     - pre
     image_templates:
+      - "tykio/tyk-k8s-bootstrap-pre-delete:latest"
       - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}"
       - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}.{{ .Minor }}"
       - "tykio/tyk-k8s-bootstrap-pre-delete:{{ .Tag }}"
