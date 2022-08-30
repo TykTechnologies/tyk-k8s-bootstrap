@@ -45,6 +45,8 @@ dockers:
     - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}.{{ .Minor }}"
     - "tykio/tyk-k8s-bootstrap-post:{{ .Tag }}"
     dockerfile: ".container/image/bootstrap-post/Dockerfile"
+    goos: linux
+    goarch: amd64
   -
     id: "pre"
     image_templates:
@@ -52,3 +54,5 @@ dockers:
       - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}.{{ .Minor }}"
       - "tykio/tyk-k8s-bootstrap-pre-delete:{{ .Tag }}"
     dockerfile: ".container/image/bootstrap-pre-delete/Dockerfile"
+    goos: linux
+    goarch: amd64
