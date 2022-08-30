@@ -19,10 +19,6 @@ builds:
       - CGO_ENABLED=0
     ldflags:
       - -X main.version={{.Version}}
-    goarch:
-      - amd64
-    goos:
-      - linux
   - id: "pre"
     main: ./cmd/bootstrap-pre-delete
     binary: bin/bootstrapapp-pre-delete
@@ -30,10 +26,6 @@ builds:
       - CGO_ENABLED=0
     ldflags:
       - -X main.version={{.Version}}
-    goarch:
-      - amd64
-    goos:
-      - linux
 
 
 # https://goreleaser.com/customization/docker/
