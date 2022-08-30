@@ -72,8 +72,9 @@ func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
 	found := false
 	for _, value := range jobs.Items {
 		if value.Name == os.Getenv("BOOTSTRAP_JOB_NAME") {
+			deletePropagationType := metav1.DeletePropagationBackground
 			err = clientset.BatchV1().Jobs(data.AppConfig.TykPodNamespace).
-				Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
+				Delete(context.TODO(), value.Name, metav1.DeleteOptions{PropagationPolicy: &deletePropagationType})
 			if err != nil {
 				return err
 			}
