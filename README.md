@@ -18,7 +18,9 @@ a. Ensures that no failed jobs are still running by deleting them (as they preve
 a clean uninstallation of the helm charts)
 b. Also detects and deletes an existing tyk-operator-secret on helm charts uninstallation
 
-
+Required RBAC roles for the app to work inside the k8s cluster:
+- delete
+- list
 
 
 Useful debug/test tips/commands:
