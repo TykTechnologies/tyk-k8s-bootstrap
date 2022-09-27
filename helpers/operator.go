@@ -91,7 +91,7 @@ func BootstrapTykEnterprisePortalSecret() error {
 	}
 
 	for _, value := range secrets.Items {
-		if value.Name == data.AppConfig.EnterprisePortalSecretName {
+		if data.AppConfig.EnterprisePortalSecretName == value.Name {
 			err = clientset.CoreV1().Secrets(data.AppConfig.TykPodNamespace).
 				Delete(context.TODO(), value.Name, v1.DeleteOptions{})
 			if err != nil {

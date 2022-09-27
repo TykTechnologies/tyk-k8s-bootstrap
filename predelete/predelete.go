@@ -69,28 +69,33 @@ func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
 
 func PreDeleteEnterprisePortalSecret(clientset *kubernetes.Clientset) error {
 	fmt.Println("Running pre delete hook")
-	secrets, err := clientset.CoreV1().Secrets(os.Getenv("TYK_POD_NAMESPACE")).List(context.TODO(), metav1.ListOptions{})
+	ns := data.AppConfig.TykPodNamespace
+
+	secrets, err := clientset.CoreV1().Secrets(ns).
+		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
 
-	found := false
+	notFound := true
 	for _, value := range secrets.Items {
-		if value.Name == os.Getenv("ENTERPRISE_PORTAL_SECRET_NAME") {
-			err = clientset.CoreV1().Secrets(os.Getenv("TYK_POD_NAMESPACE")).Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
+		if data.AppConfig.EnterprisePortalSecretName == value.Name {
+			err = clientset.CoreV1().Secrets(ns).
+				Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
+
 			if err != nil {
 				return err
 			}
-			found = true
+			fmt.Println("A previously created enterprise portal secret was identified and deleted")
+			notFound = false
 			break
 		}
 	}
 
-	if found == false {
+	if notFound {
 		fmt.Println("A previously created enterprise portal secret has not been identified")
-	} else {
-		fmt.Println("A previously created enterprise portal secret was identified and deleted")
 	}
+
 	return nil
 }
 
