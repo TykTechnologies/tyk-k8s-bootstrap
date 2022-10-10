@@ -10,7 +10,7 @@ import (
 	"tyk/tyk/bootstrap/data"
 )
 
-//maybe not needed?
+// maybe not needed?
 func ExecutePreDeleteOperations() error {
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -23,6 +23,11 @@ func ExecutePreDeleteOperations() error {
 	}
 
 	err = PreDeleteOperatorSecret(clientset)
+	if err != nil {
+		return err
+	}
+
+	err = PreDeleteEnterprisePortalSecret(clientset)
 	if err != nil {
 		return err
 	}
@@ -59,6 +64,38 @@ func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
 	} else {
 		fmt.Println("A previously created operator secret was identified and deleted")
 	}
+	return nil
+}
+
+func PreDeleteEnterprisePortalSecret(clientset *kubernetes.Clientset) error {
+	fmt.Println("Running pre delete hook")
+	ns := data.AppConfig.TykPodNamespace
+
+	secrets, err := clientset.CoreV1().Secrets(ns).
+		List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	notFound := true
+	for _, value := range secrets.Items {
+		if data.AppConfig.EnterprisePortalSecretName == value.Name {
+			err = clientset.CoreV1().Secrets(ns).
+				Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
+
+			if err != nil {
+				return err
+			}
+			fmt.Println("A previously created enterprise portal secret was identified and deleted")
+			notFound = false
+			break
+		}
+	}
+
+	if notFound {
+		fmt.Println("A previously created enterprise portal secret has not been identified")
+	}
+
 	return nil
 }
 

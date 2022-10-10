@@ -8,59 +8,64 @@ import (
 )
 
 type AppArguments struct {
-	DashboardHost           string
-	DashboardPort           int
-	DashBoardLicense        string
-	TykAdminSecret          string
-	CurrentOrgName          string
-	TykAdminPassword        string
-	Cname                   string
-	TykAdminFirstName       string
-	TykAdminLastName        string
-	TykAdminEmailAddress    string
-	UserAuth                string
-	OrgId                   string
-	CatalogId               string
-	DashboardUrl            string
-	DashboardProto          string
-	TykPodNamespace         string
-	DashboardSvc            string
-	IsDashboardEnabled      bool
-	OperatorSecretEnabled   bool
-	OperatorSecretName      string
-	GatewayAdress           string
-	BootstrapPortal         bool
-	DashboardDeploymentName string
+	DashboardHost                 string
+	DashboardPort                 int
+	DashBoardLicense              string
+	TykAdminSecret                string
+	CurrentOrgName                string
+	TykAdminPassword              string
+	Cname                         string
+	TykAdminFirstName             string
+	TykAdminLastName              string
+	TykAdminEmailAddress          string
+	UserAuth                      string
+	OrgId                         string
+	CatalogId                     string
+	DashboardUrl                  string
+	DashboardProto                string
+	TykPodNamespace               string
+	DashboardSvc                  string
+	IsDashboardEnabled            bool
+	OperatorSecretEnabled         bool
+	OperatorSecretName            string
+	EnterprisePortalSecretEnabled bool
+	EnterprisePortalSecretName    string
+	GatewayAdress                 string
+	BootstrapPortal               bool
+	DashboardDeploymentName       string
 }
 
 var AppConfig = AppArguments{
-	IsDashboardEnabled:      false,
-	OperatorSecretEnabled:   false,
-	BootstrapPortal:         false,
-	DashboardProto:          "",
-	DashboardHost:           "",
-	DashboardPort:           3000,
-	DashBoardLicense:        "",
-	TykAdminSecret:          "12345",
-	CurrentOrgName:          "TYKTYK",
-	Cname:                   "tykCName",
-	TykAdminPassword:        "123456",
-	TykAdminFirstName:       "firstName",
-	TykAdminEmailAddress:    "tyk@tyk.io",
-	TykAdminLastName:        "lastName",
-	UserAuth:                "",
-	OrgId:                   "",
-	CatalogId:               "",
-	DashboardUrl:            "",
-	TykPodNamespace:         "",
-	DashboardSvc:            "",
-	OperatorSecretName:      "",
-	GatewayAdress:           "",
-	DashboardDeploymentName: "",
+	IsDashboardEnabled:            false,
+	OperatorSecretEnabled:         false,
+	EnterprisePortalSecretEnabled: false,
+	BootstrapPortal:               false,
+	DashboardProto:                "",
+	DashboardHost:                 "",
+	DashboardPort:                 3000,
+	DashBoardLicense:              "",
+	TykAdminSecret:                "12345",
+	CurrentOrgName:                "TYKTYK",
+	Cname:                         "tykCName",
+	TykAdminPassword:              "123456",
+	TykAdminFirstName:             "firstName",
+	TykAdminEmailAddress:          "tyk@tyk.io",
+	TykAdminLastName:              "lastName",
+	UserAuth:                      "",
+	OrgId:                         "",
+	CatalogId:                     "",
+	DashboardUrl:                  "",
+	TykPodNamespace:               "",
+	DashboardSvc:                  "",
+	OperatorSecretName:            "",
+	EnterprisePortalSecretName:    "",
+	GatewayAdress:                 "",
+	DashboardDeploymentName:       "",
 }
 
 func InitAppDataPreDelete() error {
 	AppConfig.OperatorSecretName = os.Getenv(constants.OperatorSecretNameEnvVar)
+	AppConfig.EnterprisePortalSecretName = os.Getenv(constants.EnterprisePortalSecretNameEnvVar)
 	AppConfig.TykPodNamespace = os.Getenv(constants.TykPodNamespaceEnvVar)
 	return nil
 }
@@ -99,6 +104,16 @@ func InitAppDataPostInstall() error {
 		}
 	}
 	AppConfig.OperatorSecretName = os.Getenv(constants.OperatorSecretNameEnvVar)
+
+	enterprisePortalSecretEnabledRaw := os.Getenv(constants.EnterprisePortalSecretEnabledEnvVar)
+	if enterprisePortalSecretEnabledRaw != "" {
+		AppConfig.EnterprisePortalSecretEnabled, err = strconv.ParseBool(enterprisePortalSecretEnabledRaw)
+		if err != nil {
+			return err
+		}
+	}
+	AppConfig.EnterprisePortalSecretName = os.Getenv(constants.EnterprisePortalSecretNameEnvVar)
+
 	AppConfig.GatewayAdress = os.Getenv(constants.GatewayAddressEnvVar)
 	bootstrapPortalBoolRaw := os.Getenv(constants.BootstrapPortalEnvVar)
 	if bootstrapPortalBoolRaw != "" {
