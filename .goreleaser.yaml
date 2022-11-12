@@ -19,6 +19,7 @@ builds:
       - linux
     goarch:
       - amd64
+      - arm64
     env:
       - CGO_ENABLED=0
     ldflags:
@@ -30,6 +31,7 @@ builds:
       - linux
     goarch:
       - amd64
+      - arm64
     env:
       - CGO_ENABLED=0
     ldflags:
@@ -51,6 +53,17 @@ dockers:
     dockerfile: ".container/image/bootstrap-post/Dockerfile"
   -
     ids:
+      - post
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-post:latest"
+      - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}"
+      - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}.{{ .Minor }}"
+      - "tykio/tyk-k8s-bootstrap-post:{{ .Tag }}"
+    goos: linux
+    goarch: arm64
+    dockerfile: ".container/image/bootstrap-post/Dockerfile"
+  -
+    ids:
     - pre
     image_templates:
       - "tykio/tyk-k8s-bootstrap-pre-delete:latest"
@@ -60,4 +73,14 @@ dockers:
     dockerfile: ".container/image/bootstrap-pre-delete/Dockerfile"
     goos: linux
     goarch: amd64
-  
+  -
+    ids:
+      - pre
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-pre-delete:latest"
+      - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}"
+      - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}.{{ .Minor }}"
+      - "tykio/tyk-k8s-bootstrap-pre-delete:{{ .Tag }}"
+    dockerfile: ".container/image/bootstrap-pre-delete/Dockerfile"
+    goos: linux
+    goarch: arm64
