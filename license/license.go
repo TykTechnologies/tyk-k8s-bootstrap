@@ -18,6 +18,11 @@ func GetDashboardLicense() (string, error) {
 	if !ok {
 		return "", errors.New("license env var is not present")
 	}
+
+	if license == "" {
+		return "", errors.New("empty dashboard license")
+	}
+	
 	return license, nil
 }
 
