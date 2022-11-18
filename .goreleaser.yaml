@@ -24,7 +24,8 @@ builds:
       - CGO_ENABLED=0
     ldflags:
       - -X main.version={{.Version}}
-  - id: "pre"
+  -
+    id: "pre"
     main: ./cmd/bootstrap-pre-delete
     binary: bin/bootstrapapp-pre-delete
     goos:
@@ -42,45 +43,99 @@ builds:
 dockers:
   -
     ids:
-    - post
+      - post
     image_templates:
-    - "tykio/tyk-k8s-bootstrap-post:latest"
-    - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}"
-    - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}.{{ .Minor }}"
-    - "tykio/tyk-k8s-bootstrap-post:{{ .Tag }}"
+      - "tykio/tyk-k8s-bootstrap-post:latest-amd64"
+      - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}-amd64"
+      - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "tykio/tyk-k8s-bootstrap-post:{{ .Tag }}-amd64"
     goos: linux
     goarch: amd64
     dockerfile: ".container/image/bootstrap-post/Dockerfile"
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
   -
     ids:
       - post
     image_templates:
-      - "tykio/tyk-k8s-bootstrap-post:latest"
-      - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}"
-      - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}.{{ .Minor }}"
-      - "tykio/tyk-k8s-bootstrap-post:{{ .Tag }}"
+      - "tykio/tyk-k8s-bootstrap-post:latest-arm64v8"
+      - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}-arm64v8"
+      - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}.{{ .Minor }}-arm64v8"
+      - "tykio/tyk-k8s-bootstrap-post:{{ .Tag }}-arm64v8"
     goos: linux
     goarch: arm64
     dockerfile: ".container/image/bootstrap-post/Dockerfile"
-  -
-    ids:
-    - pre
-    image_templates:
-      - "tykio/tyk-k8s-bootstrap-pre-delete:latest"
-      - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}"
-      - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}.{{ .Minor }}"
-      - "tykio/tyk-k8s-bootstrap-pre-delete:{{ .Tag }}"
-    dockerfile: ".container/image/bootstrap-pre-delete/Dockerfile"
-    goos: linux
-    goarch: amd64
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
   -
     ids:
       - pre
     image_templates:
-      - "tykio/tyk-k8s-bootstrap-pre-delete:latest"
-      - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}"
-      - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}.{{ .Minor }}"
-      - "tykio/tyk-k8s-bootstrap-pre-delete:{{ .Tag }}"
+      - "tykio/tyk-k8s-bootstrap-pre-delete:latest-amd64"
+      - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}-amd64"
+      - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "tykio/tyk-k8s-bootstrap-pre-delete:{{ .Tag }}-amd64"
+    goos: linux
+    goarch: amd64
     dockerfile: ".container/image/bootstrap-pre-delete/Dockerfile"
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+  -
+    ids:
+      - pre
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-pre-delete:latest-arm64v8"
+      - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}-arm64v8"
+      - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}.{{ .Minor }}-arm64v8"
+      - "tykio/tyk-k8s-bootstrap-pre-delete:{{ .Tag }}-arm64v8"
     goos: linux
     goarch: arm64
+    dockerfile: ".container/image/bootstrap-pre-delete/Dockerfile"
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
+
+# https://goreleaser.com/customization/docker_manifest/
+docker_manifests:
+  - name_template: "tykio/tyk-k8s-bootstrap-post:latest"
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-post:latest-amd64"
+      - "tykio/tyk-k8s-bootstrap-post:latest-arm64v8"
+
+  - name_template: "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}"
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}-amd64"
+      - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}-arm64v8"
+
+  - name_template: "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "tykio/tyk-k8s-bootstrap-post:v{{ .Major }}.{{ .Minor }}-arm64v8"
+
+  - name_template: "tykio/tyk-k8s-bootstrap-post:{{ .Tag }}"
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-post:{{ .Tag }}-amd64"
+      - "tykio/tyk-k8s-bootstrap-post:{{ .Tag }}-arm64v8"
+
+  - name_template: "tykio/tyk-k8s-bootstrap-pre-delete:latest"
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-pre-delete:latest-amd64"
+      - "tykio/tyk-k8s-bootstrap-pre-delete:latest-arm64v8"
+
+  - name_template: "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}"
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}-amd64"
+      - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}-arm64v8"
+
+  - name_template: "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "tykio/tyk-k8s-bootstrap-pre-delete:v{{ .Major }}.{{ .Minor }}-arm64v8"
+
+  - name_template: "tykio/tyk-k8s-bootstrap-pre-delete:{{ .Tag }}"
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-pre-delete:{{ .Tag }}-amd64"
+      - "tykio/tyk-k8s-bootstrap-pre-delete:{{ .Tag }}-arm64v8"
