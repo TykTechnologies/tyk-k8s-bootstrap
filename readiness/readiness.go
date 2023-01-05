@@ -23,8 +23,12 @@ func CheckIfDeploymentsAreReady() error {
 		return err
 	}
 
+	dashboardSelector := "app=" + data.AppConfig.DashboardDeploymentName
+
 	pods, err := clientset.CoreV1().Pods(data.AppConfig.TykPodNamespace).
-		List(context.TODO(), metav1.ListOptions{})
+		List(context.TODO(), metav1.ListOptions{
+			LabelSelector: dashboardSelector,
+		})
 	if err != nil {
 		return err
 	}
@@ -38,7 +42,9 @@ func CheckIfDeploymentsAreReady() error {
 			return errors.New("attempted readiness check too many times")
 		}
 		pods, err = clientset.CoreV1().Pods(data.AppConfig.TykPodNamespace).
-			List(context.TODO(), metav1.ListOptions{})
+			List(context.TODO(), metav1.ListOptions{
+				LabelSelector: dashboardSelector,
+			})
 		if err != nil {
 			return err
 		}
@@ -57,8 +63,8 @@ func CheckIfDeploymentsAreReady() error {
 				totalContainers++
 			}
 		}
-		fmt.Printf("Ready containers: %v\n", containerReady)
-		fmt.Printf("Total containers: %v\n", totalContainers)
+		fmt.Printf("Ready dashboard containers: %v\n", containerReady)
+		fmt.Printf("Total dashboard containers: %v\n", totalContainers)
 
 		if containerReady != totalContainers {
 			fmt.Println("TYK PRO IS NOT READY")
