@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"strings"
@@ -23,12 +24,15 @@ func CheckIfDeploymentsAreReady() error {
 		return err
 	}
 
-	dashboardSelector := "app=" + data.AppConfig.DashboardDeploymentName
+	// reference: https://github.com/kubernetes/apimachinery/issues/47#issuecomment-431062847
+	labelSelector := metav1.LabelSelector{
+		MatchLabels: map[string]string{"app": data.AppConfig.DashboardDeploymentName},
+	}
 
-	pods, err := clientset.CoreV1().Pods(data.AppConfig.TykPodNamespace).
-		List(context.TODO(), metav1.ListOptions{
-			LabelSelector: dashboardSelector,
-		})
+	pods, err := clientset.CoreV1().Pods(data.AppConfig.TykPodNamespace).List(
+		context.TODO(),
+		metav1.ListOptions{LabelSelector: labels.Set(labelSelector.MatchLabels).String()},
+	)
 	if err != nil {
 		return err
 	}
@@ -41,10 +45,10 @@ func CheckIfDeploymentsAreReady() error {
 		if attemptCount > 180 {
 			return errors.New("attempted readiness check too many times")
 		}
-		pods, err = clientset.CoreV1().Pods(data.AppConfig.TykPodNamespace).
-			List(context.TODO(), metav1.ListOptions{
-				LabelSelector: dashboardSelector,
-			})
+		pods, err = clientset.CoreV1().Pods(data.AppConfig.TykPodNamespace).List(
+			context.TODO(),
+			metav1.ListOptions{LabelSelector: labels.Set(labelSelector.MatchLabels).String()},
+		)
 		if err != nil {
 			return err
 		}
