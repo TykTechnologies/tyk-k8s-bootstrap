@@ -55,7 +55,7 @@ func main() {
 	}
 
 	if data.AppConfig.BootstrapPortal {
-		err = helpers.BoostrapPortal(client)
+		err = helpers.BootsrapPortal(client)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

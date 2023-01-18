@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"k8s.io/apimachinery/pkg/util/json"
 	"net/http"
 	"tyk/tyk/bootstrap/data"
+
+	"k8s.io/apimachinery/pkg/util/json"
 )
 
-func BoostrapPortal(client http.Client) error {
+func BootsrapPortal(client http.Client) error {
 	err := CreatePortalDefaultSettings(client)
 	if err != nil {
 		return err
