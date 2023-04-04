@@ -5,10 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"k8s.io/apimachinery/pkg/util/json"
 	"net/http"
 	"time"
 	"tyk/tyk/bootstrap/data"
+
+	"k8s.io/apimachinery/pkg/util/json"
 )
 
 func CreateUser(client http.Client, dashboardUrl string, orgId string) (string, error) {
@@ -127,6 +128,9 @@ func GetUserData(client http.Client, dashboardUrl string, orgId string) (NeededU
 	}
 	reqData := bytes.NewReader(reqBytes)
 	req, err := http.NewRequest("POST", dashboardUrl+"/admin/users", reqData)
+	if err != nil {
+		return NeededUserData{}, err
+	}
 
 	req.Header.Set("admin-auth", data.AppConfig.TykAdminSecret)
 	req.Header.Set("Content-Type", "application/json")
