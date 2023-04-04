@@ -2,15 +2,22 @@ package helpers
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
-	"k8s.io/apimachinery/pkg/util/json"
 	"net/http"
 	"tyk/tyk/bootstrap/data"
+
+	"k8s.io/apimachinery/pkg/util/json"
 )
 
 func BoostrapPortal(client http.Client) error {
-	err := CreatePortalDefaultSettings(client)
+	err := SetPortalCname(client)
+	if err != nil {
+		return err
+	}
+
+	err = CreatePortalDefaultSettings(client)
 	if err != nil {
 		return err
 	}
@@ -34,6 +41,39 @@ type InitCatalogReq struct {
 	OrgId string `json:"org_id"`
 }
 
+type CnameRequest struct {
+	Cname string `json:"cname"`
+}
+
+func SetPortalCname(client http.Client) error {
+	fmt.Println("Setting portal cname")
+
+	cnameReq := CnameRequest{Cname: ""}
+	reqBody, err := json.Marshal(cnameReq)
+	if err != nil {
+		return err
+	}
+	reqData := bytes.NewReader(reqBody)
+
+	req, err := http.NewRequest("PUT", data.AppConfig.DashboardUrl+ApiPortalCnameEndpoint, reqData)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Authorization", data.AppConfig.UserAuth)
+
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return errors.New("failed to set portal cname")
+	}
+
+	return nil
+}
+
 func InitialiseCatalogue(client http.Client) error {
 	fmt.Println("Initialising Catalogue")
 
@@ -44,10 +84,12 @@ func InitialiseCatalogue(client http.Client) error {
 	}
 	reqData := bytes.NewReader(reqBody)
 	req, err := http.NewRequest("POST", data.AppConfig.DashboardUrl+ApiPortalCatalogueEndpoint, reqData)
-	req.Header.Set("Authorization", data.AppConfig.UserAuth)
 	if err != nil {
 		return err
 	}
+
+	req.Header.Set("Authorization", data.AppConfig.UserAuth)
+
 	res, err := client.Do(req)
 	if err != nil || res.StatusCode != http.StatusOK {
 		return err
