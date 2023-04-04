@@ -2,22 +2,23 @@ package helpers
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 	"tyk/tyk/bootstrap/data"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 func BoostrapPortal(client http.Client) error {
-	err := SetPortalCname(client)
-	if err != nil {
-		return err
-	}
-
-	err = CreatePortalDefaultSettings(client)
+	err := CreatePortalDefaultSettings(client)
 	if err != nil {
 		return err
 	}
@@ -28,6 +29,11 @@ func BoostrapPortal(client http.Client) error {
 	}
 
 	err = CreatePortalHomepage(client)
+	if err != nil {
+		return err
+	}
+
+	err = SetPortalCname(client)
 	if err != nil {
 		return err
 	}
@@ -71,7 +77,8 @@ func SetPortalCname(client http.Client) error {
 		return errors.New("failed to set portal cname")
 	}
 
-	return nil
+	// restarting the dashboard to apply the new cname
+	return RestartDashboard()
 }
 
 func InitialiseCatalogue(client http.Client) error {
@@ -221,4 +228,25 @@ func CreatePortalDefaultSettings(client http.Client) error {
 	fmt.Println(string(resBytes))
 
 	return nil
+}
+
+func RestartDashboard() error {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return err
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return err
+	}
+
+	deploymentsClient := clientset.AppsV1().Deployments(data.AppConfig.TykPodNamespace)
+	timeStamp := fmt.Sprintf(`{"spec": {"template": {"metadata": {"annotations": {"kubectl.kubernetes.io/restartedAt": "%s"}}}}}`,
+		time.Now().Format("20060102150405"))
+
+	_, err = deploymentsClient.Patch(context.TODO(), data.AppConfig.DashboardDeploymentName,
+		types.StrategicMergePatchType, []byte(timeStamp), metav1.PatchOptions{})
+
+	return err
 }
