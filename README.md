@@ -41,10 +41,10 @@ After, the commands below help you with building and pushing the containers to t
 
 
 ```bash
-rm bin/bootstrapapp-post && make build-bootstrap-post && docker build -t localhost:5001/bootstrap-tyk-post:$bsVers -f ./.container/image/bootstrap-post/Dockerfile . && docker push localhost:5001/bootstrap-tyk-post:$bsVers
+(rm bin/bootstrapapp-post || true) && make build-bootstrap-post && docker build -t localhost:5001/bootstrap-tyk-post:$bsVers -f ./.container/image/bootstrap-post/Dockerfile ./bin && docker push localhost:5001/bootstrap-tyk-post:$bsVers
 ```
 ```bash
-rm bin/bootstrapapp-pre-delete && make build-bootstrap-pre-delete && docker build -t localhost:5001/bootstrap-tyk-pre-delete:$bsVers -f ./.container/image/bootstrap-pre-delete/Dockerfile . & docker push localhost:5001/bootstrap-tyk-pre-delete:$bsVers
+(rm bin/bootstrapapp-pre-delete) && make build-bootstrap-pre-delete && docker build -t localhost:5001/bootstrap-tyk-pre-delete:$bsVers -f ./.container/image/bootstrap-pre-delete/Dockerfile ./bin & docker push localhost:5001/bootstrap-tyk-pre-delete:$bsVers
 ```
 
 The "hack" folder comes with a job (job.yaml) that can be applied directly together
