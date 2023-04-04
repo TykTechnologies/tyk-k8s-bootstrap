@@ -10,7 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 )
 
-func BootsrapPortal(client http.Client) error {
+func BootstrapPortal(client http.Client) error {
 	err := CreatePortalDefaultSettings(client)
 	if err != nil {
 		return err
