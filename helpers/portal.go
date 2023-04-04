@@ -54,7 +54,7 @@ type CnameRequest struct {
 func SetPortalCname(client http.Client) error {
 	fmt.Println("Setting portal cname")
 
-	cnameReq := CnameRequest{Cname: ""}
+	cnameReq := CnameRequest{Cname: data.AppConfig.Cname}
 	reqBody, err := json.Marshal(cnameReq)
 	if err != nil {
 		return err
