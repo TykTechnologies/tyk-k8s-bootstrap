@@ -22,7 +22,7 @@ func GetDashboardLicense() (string, error) {
 	if license == "" {
 		return "", errors.New("empty dashboard license")
 	}
-	
+
 	return license, nil
 }
 

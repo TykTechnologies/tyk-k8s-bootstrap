@@ -2,11 +2,19 @@ package helpers
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"fmt"
 	"io"
-	"k8s.io/apimachinery/pkg/util/json"
 	"net/http"
+	"time"
 	"tyk/tyk/bootstrap/data"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/json"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 func BoostrapPortal(client http.Client) error {
@@ -25,6 +33,11 @@ func BoostrapPortal(client http.Client) error {
 		return err
 	}
 
+	err = SetPortalCname(client)
+	if err != nil {
+		return err
+	}
+
 	fmt.Println("finished bootstrapping portal")
 
 	return nil
@@ -32,6 +45,40 @@ func BoostrapPortal(client http.Client) error {
 
 type InitCatalogReq struct {
 	OrgId string `json:"org_id"`
+}
+
+type CnameRequest struct {
+	Cname string `json:"cname"`
+}
+
+func SetPortalCname(client http.Client) error {
+	fmt.Println("Setting portal cname")
+
+	cnameReq := CnameRequest{Cname: data.AppConfig.Cname}
+	reqBody, err := json.Marshal(cnameReq)
+	if err != nil {
+		return err
+	}
+	reqData := bytes.NewReader(reqBody)
+
+	req, err := http.NewRequest("PUT", data.AppConfig.DashboardUrl+ApiPortalCnameEndpoint, reqData)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Authorization", data.AppConfig.UserAuth)
+
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return errors.New("failed to set portal cname")
+	}
+
+	// restarting the dashboard to apply the new cname
+	return RestartDashboard()
 }
 
 func InitialiseCatalogue(client http.Client) error {
@@ -44,10 +91,12 @@ func InitialiseCatalogue(client http.Client) error {
 	}
 	reqData := bytes.NewReader(reqBody)
 	req, err := http.NewRequest("POST", data.AppConfig.DashboardUrl+ApiPortalCatalogueEndpoint, reqData)
-	req.Header.Set("Authorization", data.AppConfig.UserAuth)
 	if err != nil {
 		return err
 	}
+
+	req.Header.Set("Authorization", data.AppConfig.UserAuth)
+
 	res, err := client.Do(req)
 	if err != nil || res.StatusCode != http.StatusOK {
 		return err
@@ -179,4 +228,25 @@ func CreatePortalDefaultSettings(client http.Client) error {
 	fmt.Println(string(resBytes))
 
 	return nil
+}
+
+func RestartDashboard() error {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return err
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return err
+	}
+
+	deploymentsClient := clientset.AppsV1().Deployments(data.AppConfig.TykPodNamespace)
+	timeStamp := fmt.Sprintf(`{"spec": {"template": {"metadata": {"annotations": {"kubectl.kubernetes.io/restartedAt": "%s"}}}}}`,
+		time.Now().Format("20060102150405"))
+
+	_, err = deploymentsClient.Patch(context.TODO(), data.AppConfig.DashboardDeploymentName,
+		types.StrategicMergePatchType, []byte(timeStamp), metav1.PatchOptions{})
+
+	return err
 }

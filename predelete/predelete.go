@@ -3,11 +3,12 @@ package predelete
 import (
 	"context"
 	"fmt"
+	"os"
+	"tyk/tyk/bootstrap/data"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"os"
-	"tyk/tyk/bootstrap/data"
 )
 
 // maybe not needed?
@@ -59,7 +60,7 @@ func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
 		}
 	}
 
-	if found == false {
+	if !found {
 		fmt.Println("A previously created operator secret has not been identified")
 	} else {
 		fmt.Println("A previously created operator secret was identified and deleted")
@@ -120,7 +121,7 @@ func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
 		}
 	}
 
-	if found == false {
+	if !found {
 		fmt.Println("A previously created bootstrapping job has not been identified")
 	} else {
 		fmt.Println("A previously created bootstrapping job was identified and deleted")

@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"k8s.io/apimachinery/pkg/util/json"
 	"net/http"
 	"tyk/tyk/bootstrap/data"
+
+	"k8s.io/apimachinery/pkg/util/json"
 )
 
 const AdminOrganisationsEndpoint = "/admin/organisations"
@@ -15,6 +16,7 @@ const ApiUsersActionsResetEndpoint = "%s/api/users/%s/actions/reset"
 const ApiPortalCatalogueEndpoint = "/api/portal/catalogue"
 const ApiPortalPagesEndpoint = "/api/portal/pages"
 const ApiPortalConfigurationEndpoint = "/api/portal/configuration"
+const ApiPortalCnameEndpoint = "/api/portal/cname"
 
 const TykModePro = "pro"
 
@@ -55,7 +57,7 @@ func CheckForExistingOrganisation(client http.Client) error {
 			if organisation["owner_name"] == data.AppConfig.CurrentOrgName ||
 				organisation["cname"] == data.AppConfig.Cname {
 				return errors.New("there shouldn't be any organisations, please " +
-					"disable bootstrapping to avoid losing data or delete" +
+					"disable bootstrapping to avoid losing data or delete " +
 					"already existing organisations")
 			}
 		}
