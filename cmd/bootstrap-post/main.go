@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"os"
@@ -40,7 +41,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	client := http.Client{}
+	tp := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: data.AppConfig.DashboardInsecureSkipVerify},
+	}
+	client := http.Client{Transport: tp}
 
 	err = helpers.CheckForExistingOrganisation(client)
 	if err != nil {
