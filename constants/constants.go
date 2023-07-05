@@ -15,6 +15,7 @@ const (
 	TykPodNamespaceEnvVar               = "TYK_POD_NAMESPACE"
 	TykDashboardProtoEnvVar             = "TYK_DASHBOARD_PROTO"
 	TykDashboardSvcEnvVar               = "TYK_DASHBOARD_SVC"
+	TykDashboardInsecureSkipVerify      = "TYK_DASHBOARD_INSECURE_SKIP_VERIFY"
 	TykDbListenport                     = "TYK_DB_LISTENPORT"
 	TykDbLicensekeyEnvVar               = "TYK_DB_LICENSEKEY"
 	TykAdminSecretEnvVar                = "TYK_ADMIN_SECRET"

@@ -25,6 +25,7 @@ type AppArguments struct {
 	DashboardProto                string
 	TykPodNamespace               string
 	DashboardSvc                  string
+	DashboardInsecureSkipVerify   bool
 	IsDashboardEnabled            bool
 	OperatorSecretEnabled         bool
 	OperatorSecretName            string
@@ -57,6 +58,7 @@ var AppConfig = AppArguments{
 	DashboardUrl:                  "",
 	TykPodNamespace:               "",
 	DashboardSvc:                  "",
+	DashboardInsecureSkipVerify:   false,
 	OperatorSecretName:            "",
 	EnterprisePortalSecretName:    "",
 	GatewayAdress:                 "",
@@ -123,6 +125,14 @@ func InitAppDataPostInstall() error {
 		}
 	}
 	AppConfig.DashboardDeploymentName = os.Getenv(constants.TykDashboardDeployEnvVar)
+
+	dashboardInsecureSkipVerifyRaw := os.Getenv(constants.TykDashboardInsecureSkipVerify)
+	if dashboardInsecureSkipVerifyRaw != "" {
+		AppConfig.DashboardInsecureSkipVerify, err = strconv.ParseBool(dashboardInsecureSkipVerifyRaw)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
