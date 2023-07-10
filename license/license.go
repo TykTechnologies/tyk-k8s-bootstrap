@@ -14,7 +14,6 @@ const TykDashboardLicenseEnvVarName = "TYK_DB_LICENSEKEY"
 
 func GetDashboardLicense() (string, error) {
 	license, ok := os.LookupEnv(TykDashboardLicenseEnvVarName)
-	fmt.Println(license)
 	if !ok {
 		return "", errors.New("license env var is not present")
 	}

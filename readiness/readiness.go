@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	v1 "k8s.io/api/core/v1"
 	"strings"
 	"time"
 	"tyk/tyk/bootstrap/data"
@@ -13,7 +14,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func CheckIfDeploymentsAreReady() error {
+func CheckIfRequiredDeploymentsAreReady() error {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return err
@@ -38,24 +39,30 @@ func CheckIfDeploymentsAreReady() error {
 			return err
 		}
 		fmt.Printf("There are %d other pods in the cluster\n", len(pods.Items)-1)
-		var containerReady int
-		var totalContainers int
+
+		var requiredPods []v1.Pod
 		for _, pod := range pods.Items {
-			if strings.HasPrefix(pod.Name, "bootstrap") {
-				continue
-			}
-			podStatus := pod.Status
-			for container := range pod.Spec.Containers {
-				if podStatus.ContainerStatuses[container].Ready {
-					containerReady++
-				}
-				totalContainers++
+			if strings.Contains(pod.Name, "dashboard") ||
+				strings.Contains(pod.Name, "redis") {
+				requiredPods = append(requiredPods, pod)
 			}
 		}
-		fmt.Printf("Ready containers: %v\n", containerReady)
-		fmt.Printf("Total containers: %v\n", totalContainers)
 
-		if containerReady != totalContainers {
+		notReadyPods := make(map[string]struct{})
+		for _, pod := range requiredPods {
+			podStatus := pod.Status
+			for container := range pod.Spec.Containers {
+				if !podStatus.ContainerStatuses[container].Ready {
+					notReadyPods[pod.Name] = struct{}{}
+				}
+			}
+		}
+		fmt.Printf("The following pods have containers that are not ready: ")
+		for pod, _ := range notReadyPods {
+			fmt.Println(pod)
+		}
+
+		if len(notReadyPods) != 0 {
 			fmt.Println("TYK PRO IS NOT READY")
 		} else {
 			fmt.Println("TYK PRO IS READY TO BE BOOTSTRAPPED")

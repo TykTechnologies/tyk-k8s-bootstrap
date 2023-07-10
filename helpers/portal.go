@@ -38,8 +38,6 @@ func BoostrapPortal(client http.Client) error {
 		return err
 	}
 
-	fmt.Println("finished bootstrapping portal")
-
 	return nil
 }
 
