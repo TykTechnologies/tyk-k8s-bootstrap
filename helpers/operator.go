@@ -11,7 +11,6 @@ import (
 )
 
 func BootstrapTykOperatorSecret() error {
-	fmt.Println("Started bootstrapping operator secret")
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return err
@@ -49,7 +48,6 @@ func BootstrapTykOperatorSecret() error {
 }
 
 func CreateTykOperatorSecret(clientset *kubernetes.Clientset) error {
-	fmt.Println("Creating operator secret")
 	secretData := map[string][]byte{
 		TykAuth: []byte(data.AppConfig.UserAuth),
 		TykOrg:  []byte(data.AppConfig.OrgId),
@@ -73,7 +71,6 @@ func CreateTykOperatorSecret(clientset *kubernetes.Clientset) error {
 }
 
 func BootstrapTykEnterprisePortalSecret() error {
-	fmt.Println("Started bootstrapping enterprise portal secret")
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return err
@@ -111,7 +108,6 @@ func BootstrapTykEnterprisePortalSecret() error {
 }
 
 func CreateTykEnterprisePortalSecret(clientset *kubernetes.Clientset) error {
-	fmt.Println("Creating enterprise portal secret")
 	secretData := map[string][]byte{
 		TykAuth: []byte(data.AppConfig.UserAuth),
 		TykOrg:  []byte(data.AppConfig.OrgId),

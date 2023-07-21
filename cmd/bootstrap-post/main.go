@@ -28,13 +28,13 @@ func main() {
 		fmt.Println(err)
 	}
 	if licenseIsValid {
-		fmt.Println("license is valid")
+		fmt.Println("Provided license is valid")
 	} else {
-		fmt.Println("license is invalid")
+		fmt.Println("Provided license is invalid")
 		os.Exit(1)
 	}
 
-	err = readiness.CheckIfDeploymentsAreReady()
+	err = readiness.CheckIfRequiredDeploymentsAreReady()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -42,26 +42,23 @@ func main() {
 
 	client := http.Client{}
 
+	fmt.Println("Started creating dashboard org")
 	err = helpers.CheckForExistingOrganisation(client)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+	fmt.Println("Finished creating dashboard org")
 
-	err = helpers.GenerateCredentials(client)
+	fmt.Println("Generating dashboard credentials")
+	err = helpers.GenerateDashboardCredentials(client)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+	fmt.Println("Finished generating dashboard credentials")
 
-	if data.AppConfig.BootstrapPortal {
-		err = helpers.BoostrapPortal(client)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-	}
-
+	fmt.Println("Started bootstrapping operator secret")
 	if data.AppConfig.OperatorSecretEnabled {
 		err = helpers.BootstrapTykOperatorSecret()
 		if err != nil {
@@ -69,7 +66,9 @@ func main() {
 			os.Exit(1)
 		}
 	}
+	fmt.Println("Finished bootstrapping operator secret")
 
+	fmt.Println("Started bootstrapping portal secret")
 	if data.AppConfig.EnterprisePortalSecretEnabled {
 		err = helpers.BootstrapTykEnterprisePortalSecret()
 		if err != nil {
@@ -77,4 +76,15 @@ func main() {
 			os.Exit(1)
 		}
 	}
+
+	fmt.Println("Started bootstrapping portal with requests to dashboard")
+	if data.AppConfig.BootstrapPortal {
+		err = helpers.BoostrapPortal(client)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}
+	fmt.Println("Finished bootstrapping portal")
+
 }

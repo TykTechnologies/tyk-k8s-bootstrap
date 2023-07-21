@@ -57,7 +57,7 @@ func SetUserPassword(client http.Client, userId string, authCode string, dashboa
 	return nil
 }
 
-func GenerateCredentials(client http.Client) error {
+func GenerateDashboardCredentials(client http.Client) error {
 	orgId, err := CreateOrganisation(client, data.AppConfig.DashboardUrl)
 	if err != nil {
 		return err
