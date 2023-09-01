@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
-	"tyk/tyk/bootstrap/license/preinstall"
+	"tyk/tyk/bootstrap/preinstallation"
 )
 
 func main() {
-	err := preinstall.PreHookInstall()
+	err := preinstallation.PreHookInstall()
 	if err != nil {
 		fmt.Printf("Failed to run pre-hook job, err: %v", err)
 		os.Exit(1)
