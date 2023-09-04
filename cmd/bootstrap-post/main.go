@@ -7,7 +7,6 @@ import (
 	"os"
 	"tyk/tyk/bootstrap/data"
 	"tyk/tyk/bootstrap/helpers"
-	"tyk/tyk/bootstrap/license"
 	"tyk/tyk/bootstrap/readiness"
 )
 
@@ -15,23 +14,6 @@ func main() {
 	err := data.InitAppDataPostInstall()
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	dashboardLicenseKey, err := license.GetDashboardLicense()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	licenseIsValid, err := license.ValidateDashboardLicense(dashboardLicenseKey)
-	if err != nil {
-		fmt.Println(err)
-	}
-	if licenseIsValid {
-		fmt.Println("Provided license is valid")
-	} else {
-		fmt.Println("Provided license is invalid")
 		os.Exit(1)
 	}
 

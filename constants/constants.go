@@ -16,6 +16,7 @@ const (
 	TykDashboardProtoEnvVar             = "TYK_DASHBOARD_PROTO"
 	TykDashboardSvcEnvVar               = "TYK_DASHBOARD_SVC"
 	TykDashboardInsecureSkipVerify      = "TYK_DASHBOARD_INSECURE_SKIP_VERIFY"
+	TykDashboardLicenseEnvVarName       = "TYK_DB_LICENSEKEY"
 	TykDbListenport                     = "TYK_DB_LISTENPORT"
 	TykDbLicensekeyEnvVar               = "TYK_DB_LICENSEKEY"
 	TykAdminSecretEnvVar                = "TYK_ADMIN_SECRET"

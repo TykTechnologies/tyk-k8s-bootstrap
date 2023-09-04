@@ -37,6 +37,19 @@ builds:
       - CGO_ENABLED=0
     ldflags:
       - -X main.version={{.Version}}
+  -
+    id: "preinstall"
+    main: ./cmd/bootstrap-pre-install
+    binary: bin/bootstrapapp-pre-install
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -X main.version={{.Version}}
 
 
 # https://goreleaser.com/customization/docker/
@@ -97,6 +110,34 @@ dockers:
     use: buildx
     build_flag_templates:
       - "--platform=linux/arm64/v8"
+  -
+    ids:
+      - preinstall
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-pre-install:latest-amd64"
+      - "tykio/tyk-k8s-bootstrap-pre-install:v{{ .Major }}-amd64"
+      - "tykio/tyk-k8s-bootstrap-pre-install:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "tykio/tyk-k8s-bootstrap-pre-install:{{ .Tag }}-amd64"
+    goos: linux
+    goarch: amd64
+    dockerfile: ".container/image/bootstrap-pre-install/Dockerfile"
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+  -
+    ids:
+      - preinstall
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-pre-install:latest-arm64v8"
+      - "tykio/tyk-k8s-bootstrap-pre-install:v{{ .Major }}-arm64v8"
+      - "tykio/tyk-k8s-bootstrap-pre-install:v{{ .Major }}.{{ .Minor }}-arm64v8"
+      - "tykio/tyk-k8s-bootstrap-pre-install:{{ .Tag }}-arm64v8"
+    goos: linux
+    goarch: arm64
+    dockerfile: ".container/image/bootstrap-pre-install/Dockerfile"
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
 
 # https://goreleaser.com/customization/docker_manifest/
 docker_manifests:
@@ -139,3 +180,23 @@ docker_manifests:
     image_templates:
       - "tykio/tyk-k8s-bootstrap-pre-delete:{{ .Tag }}-amd64"
       - "tykio/tyk-k8s-bootstrap-pre-delete:{{ .Tag }}-arm64v8"
+
+  - name_template: "tykio/tyk-k8s-bootstrap-pre-install:latest"
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-pre-install:latest-amd64"
+      - "tykio/tyk-k8s-bootstrap-pre-install:latest-arm64v8"
+
+  - name_template: "tykio/tyk-k8s-bootstrap-pre-install:v{{ .Major }}"
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-pre-install:v{{ .Major }}-amd64"
+      - "tykio/tyk-k8s-bootstrap-pre-install:v{{ .Major }}-arm64v8"
+
+  - name_template: "tykio/tyk-k8s-bootstrap-pre-install:v{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-pre-install:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "tykio/tyk-k8s-bootstrap-pre-install:v{{ .Major }}.{{ .Minor }}-arm64v8"
+
+  - name_template: "tykio/tyk-k8s-bootstrap-pre-install:{{ .Tag }}"
+    image_templates:
+      - "tykio/tyk-k8s-bootstrap-pre-install:{{ .Tag }}-amd64"
+      - "tykio/tyk-k8s-bootstrap-pre-install:{{ .Tag }}-arm64v8"

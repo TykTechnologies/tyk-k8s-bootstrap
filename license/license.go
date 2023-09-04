@@ -8,12 +8,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"tyk/tyk/bootstrap/constants"
 )
 
-const TykDashboardLicenseEnvVarName = "TYK_DB_LICENSEKEY"
-
 func GetDashboardLicense() (string, error) {
-	license, ok := os.LookupEnv(TykDashboardLicenseEnvVarName)
+	license, ok := os.LookupEnv(constants.TykDashboardLicenseEnvVarName)
 	if !ok {
 		return "", errors.New("license env var is not present")
 	}
