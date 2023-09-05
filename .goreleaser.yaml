@@ -14,7 +14,7 @@ builds:
   -
     id: "post"
     main: ./cmd/bootstrap-post
-    binary: bin/bootstrapapp-post
+    binary: bootstrapapp-post
     goos:
       - linux
     goarch:
@@ -27,7 +27,7 @@ builds:
   -
     id: "pre"
     main: ./cmd/bootstrap-pre-delete
-    binary: bin/bootstrapapp-pre-delete
+    binary: bootstrapapp-pre-delete
     goos:
       - linux
     goarch:
@@ -40,7 +40,7 @@ builds:
   -
     id: "preinstall"
     main: ./cmd/bootstrap-pre-install
-    binary: bin/bootstrapapp-pre-install
+    binary: bootstrapapp-pre-install
     goos:
       - linux
     goarch:
