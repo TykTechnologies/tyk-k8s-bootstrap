@@ -73,6 +73,8 @@ func InitAppDataPreDelete() error {
 }
 
 func InitAppDataPostInstall() error {
+	var err error
+
 	AppConfig.TykAdminFirstName = os.Getenv(constants.TykAdminFirstNameEnvVar)
 	AppConfig.TykAdminLastName = os.Getenv(constants.TykAdminLastNameEnvVar)
 	AppConfig.TykAdminEmailAddress = os.Getenv(constants.TykAdminEmailEnvVar)
@@ -80,21 +82,28 @@ func InitAppDataPostInstall() error {
 	AppConfig.TykPodNamespace = os.Getenv(constants.TykPodNamespaceEnvVar)
 	AppConfig.DashboardProto = os.Getenv(constants.TykDashboardProtoEnvVar)
 	AppConfig.DashboardSvc = os.Getenv(constants.TykDashboardSvcEnvVar)
-	dbPort, err := strconv.ParseInt(os.Getenv(constants.TykDbListenport), 10, 64)
-	if err != nil {
-		return err
+
+	dbPortRaw := os.Getenv(constants.TykDbListenport)
+	if dbPortRaw != "" {
+		dbPort, err := strconv.ParseInt(dbPortRaw, 10, 64)
+		if err != nil {
+			return fmt.Errorf("failed to parse %v, err: %v", constants.TykDbListenport, err)
+		}
+
+		AppConfig.DashboardPort = int(dbPort)
 	}
-	AppConfig.DashboardPort = int(dbPort)
+
 	AppConfig.DashBoardLicense = os.Getenv(constants.TykDbLicensekeyEnvVar)
 	AppConfig.TykAdminSecret = os.Getenv(constants.TykAdminSecretEnvVar)
 	AppConfig.CurrentOrgName = os.Getenv(constants.TykOrgNameEnvVar)
 	AppConfig.Cname = os.Getenv(constants.TykOrgCnameEnvVar)
 	AppConfig.DashboardUrl = GetDashboardUrl()
+
 	dashEnabledRaw := os.Getenv(constants.DashboardEnabledEnvVar)
 	if dashEnabledRaw != "" {
 		AppConfig.IsDashboardEnabled, err = strconv.ParseBool(os.Getenv(constants.DashboardEnabledEnvVar))
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to parse %v, err: %v", constants.DashboardEnabledEnvVar, err)
 		}
 	}
 
@@ -102,26 +111,28 @@ func InitAppDataPostInstall() error {
 	if operatorSecretEnabledRaw != "" {
 		AppConfig.OperatorSecretEnabled, err = strconv.ParseBool(operatorSecretEnabledRaw)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to parse %v, err: %v", constants.OperatorSecretEnabledEnvVar, err)
 		}
 	}
+
 	AppConfig.OperatorSecretName = os.Getenv(constants.OperatorSecretNameEnvVar)
 
 	enterprisePortalSecretEnabledRaw := os.Getenv(constants.EnterprisePortalSecretEnabledEnvVar)
 	if enterprisePortalSecretEnabledRaw != "" {
 		AppConfig.EnterprisePortalSecretEnabled, err = strconv.ParseBool(enterprisePortalSecretEnabledRaw)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to parse %v, err: %v", constants.EnterprisePortalSecretEnabledEnvVar, err)
 		}
 	}
-	AppConfig.EnterprisePortalSecretName = os.Getenv(constants.EnterprisePortalSecretNameEnvVar)
 
+	AppConfig.EnterprisePortalSecretName = os.Getenv(constants.EnterprisePortalSecretNameEnvVar)
 	AppConfig.GatewayAdress = os.Getenv(constants.GatewayAddressEnvVar)
+
 	bootstrapPortalBoolRaw := os.Getenv(constants.BootstrapPortalEnvVar)
 	if bootstrapPortalBoolRaw != "" {
 		AppConfig.BootstrapPortal, err = strconv.ParseBool(bootstrapPortalBoolRaw)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to parse %v, err: %v", constants.BootstrapPortalEnvVar, err)
 		}
 	}
 	AppConfig.DashboardDeploymentName = os.Getenv(constants.TykDashboardDeployEnvVar)
@@ -130,7 +141,7 @@ func InitAppDataPostInstall() error {
 	if dashboardInsecureSkipVerifyRaw != "" {
 		AppConfig.DashboardInsecureSkipVerify, err = strconv.ParseBool(dashboardInsecureSkipVerifyRaw)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to parse %v, err: %v", constants.TykDashboardInsecureSkipVerify, err)
 		}
 	}
 
