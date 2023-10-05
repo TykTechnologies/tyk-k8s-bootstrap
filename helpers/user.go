@@ -139,18 +139,16 @@ func GetUserData(client http.Client, dashboardUrl string, orgId string) (NeededU
 		return NeededUserData{}, err
 	}
 
-	fmt.Println(res.StatusCode)
 	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println(err)
 	}
-	bodyString := string(bodyBytes)
-	fmt.Println(bodyString)
 
 	getUserResponse := CreateUserResponse{}
 	err = json.Unmarshal(bodyBytes, &getUserResponse)
 	if err != nil {
 		return NeededUserData{}, err
 	}
+
 	return NeededUserData{UserId: getUserResponse.Meta.ID, AuthCode: getUserResponse.Message}, nil
 }

@@ -99,18 +99,21 @@ func InitialiseCatalogue(client http.Client) error {
 	if err != nil || res.StatusCode != http.StatusOK {
 		return err
 	}
+
 	resp := DashboardGeneralResponse{}
+
 	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	err = json.Unmarshal(bodyBytes, &resp)
 	if err != nil {
 		return err
 	}
+
 	data.AppConfig.CatalogId = resp.Message
 
-	fmt.Println(string(bodyBytes))
 	return nil
 }
 
@@ -137,12 +140,11 @@ func CreatePortalHomepage(client http.Client) error {
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	err = json.Unmarshal(bodyBytes, &resp)
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(string(bodyBytes))
 
 	return nil
 }
@@ -213,17 +215,11 @@ func CreatePortalDefaultSettings(client http.Client) error {
 	if err != nil {
 		return err
 	}
+
 	res, err := client.Do(req)
 	if err != nil || res.StatusCode != http.StatusOK {
 		return err
 	}
-
-	resBytes, err := io.ReadAll(res.Body)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(resBytes))
 
 	return nil
 }
