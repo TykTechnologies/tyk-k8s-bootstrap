@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
-	"tyk/tyk/bootstrap/preinstallation"
+	"tyk/tyk/bootstrap/k8s"
 )
 
 func main() {
-	err := preinstallation.PreHookInstall()
+	err := k8s.PreHookInstall()
 	if err != nil {
 		fmt.Printf("Failed to run pre-hook job, err: %v", err)
 		os.Exit(1)

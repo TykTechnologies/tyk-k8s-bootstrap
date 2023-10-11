@@ -1,39 +1,26 @@
-package predelete
+package k8s
 
 import (
 	"context"
 	"fmt"
 	"os"
-	"tyk/tyk/bootstrap/data"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
 // maybe not needed?
-func ExecutePreDeleteOperations() error {
-	config, err := rest.InClusterConfig()
+func (c *Client) ExecutePreDeleteOperations() error {
+	err := c.deleteOperatorSecret()
 	if err != nil {
 		return err
 	}
 
-	clientset, err := kubernetes.NewForConfig(config)
+	err = c.deleteEnterprisePortalSecret()
 	if err != nil {
 		return err
 	}
 
-	err = PreDeleteOperatorSecret(clientset)
-	if err != nil {
-		return err
-	}
-
-	err = PreDeleteEnterprisePortalSecret(clientset)
-	if err != nil {
-		return err
-	}
-
-	err = PreDeleteBootstrappingJobs(clientset)
+	err = c.deleteBootstrappingJobs()
 	if err != nil {
 		return err
 	}
@@ -41,9 +28,9 @@ func ExecutePreDeleteOperations() error {
 	return nil
 }
 
-func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
+func (c *Client) deleteOperatorSecret() error {
 	fmt.Println("Running pre delete hook")
-	secrets, err := clientset.CoreV1().Secrets(os.Getenv("TYK_POD_NAMESPACE")).List(context.TODO(), metav1.ListOptions{})
+	secrets, err := c.clientSet.CoreV1().Secrets(os.Getenv("TYK_POD_NAMESPACE")).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -51,7 +38,7 @@ func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
 	found := false
 	for _, value := range secrets.Items {
 		if value.Name == os.Getenv("OPERATOR_SECRET_NAME") {
-			err = clientset.CoreV1().Secrets(os.Getenv("TYK_POD_NAMESPACE")).Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
+			err = c.clientSet.CoreV1().Secrets(os.Getenv("TYK_POD_NAMESPACE")).Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
 			if err != nil {
 				return err
 			}
@@ -68,11 +55,11 @@ func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
 	return nil
 }
 
-func PreDeleteEnterprisePortalSecret(clientset *kubernetes.Clientset) error {
+func (c *Client) deleteEnterprisePortalSecret() error {
 	fmt.Println("Running pre delete hook")
-	ns := data.AppConfig.TykPodNamespace
+	ns := c.AppArgs.TykPodNamespace
 
-	secrets, err := clientset.CoreV1().Secrets(ns).
+	secrets, err := c.clientSet.CoreV1().Secrets(ns).
 		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -80,8 +67,8 @@ func PreDeleteEnterprisePortalSecret(clientset *kubernetes.Clientset) error {
 
 	notFound := true
 	for _, value := range secrets.Items {
-		if data.AppConfig.EnterprisePortalSecretName == value.Name {
-			err = clientset.CoreV1().Secrets(ns).
+		if c.AppArgs.EnterprisePortalSecretName == value.Name {
+			err = c.clientSet.CoreV1().Secrets(ns).
 				Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
 
 			if err != nil {
@@ -100,8 +87,8 @@ func PreDeleteEnterprisePortalSecret(clientset *kubernetes.Clientset) error {
 	return nil
 }
 
-func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
-	jobs, err := clientset.BatchV1().Jobs(data.AppConfig.TykPodNamespace).
+func (c *Client) deleteBootstrappingJobs() error {
+	jobs, err := c.clientSet.BatchV1().Jobs(c.AppArgs.TykPodNamespace).
 		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -111,7 +98,7 @@ func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
 	for _, value := range jobs.Items {
 		if value.Name == os.Getenv("BOOTSTRAP_JOB_NAME") {
 			deletePropagationType := metav1.DeletePropagationBackground
-			err = clientset.BatchV1().Jobs(data.AppConfig.TykPodNamespace).
+			err = c.clientSet.BatchV1().Jobs(c.AppArgs.TykPodNamespace).
 				Delete(context.TODO(), value.Name, metav1.DeleteOptions{PropagationPolicy: &deletePropagationType})
 			if err != nil {
 				return err

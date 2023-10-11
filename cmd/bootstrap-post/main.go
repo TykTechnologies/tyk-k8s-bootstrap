@@ -3,41 +3,53 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"k8s.io/client-go/tools/clientcmd"
 	"net/http"
 	"os"
-	"tyk/tyk/bootstrap/data"
-	"tyk/tyk/bootstrap/helpers"
-	"tyk/tyk/bootstrap/readiness"
+	"tyk/tyk/bootstrap/k8s"
+	"tyk/tyk/bootstrap/tyk"
+	"tyk/tyk/bootstrap/tyk/data"
 )
 
 func main() {
-	err := data.InitAppDataPostInstall()
+	k8sClient, err := k8s.K8sClient(clientcmd.NewDefaultClientConfigLoadingRules().GetDefaultFilename())
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	err = readiness.CheckIfRequiredDeploymentsAreReady()
+	appArgs, err := data.InitAppDataPostInstall()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	k8sClient.AppArgs = appArgs
+
+	err = k8sClient.CheckIfRequiredDeploymentsAreReady()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	tp := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: data.AppConfig.DashboardInsecureSkipVerify},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: appArgs.DashboardInsecureSkipVerify},
 	}
 	client := http.Client{Transport: tp}
 
+	tykSvc := tyk.NewTykService(client, appArgs)
+
 	fmt.Println("Started creating dashboard org")
-	err = helpers.CheckForExistingOrganisation(client)
+	err = tykSvc.CheckForExistingOrganisation()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
 	fmt.Println("Finished creating dashboard org")
 
 	fmt.Println("Generating dashboard credentials")
-	err = helpers.GenerateDashboardCredentials(client)
+	err = tykSvc.GenerateDashboardCredentials()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -45,8 +57,8 @@ func main() {
 	fmt.Println("Finished generating dashboard credentials")
 
 	fmt.Println("Started bootstrapping operator secret")
-	if data.AppConfig.OperatorSecretEnabled {
-		err = helpers.BootstrapTykOperatorSecret()
+	if appArgs.OperatorSecretEnabled {
+		err = k8sClient.BootstrapTykOperatorSecret()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -55,8 +67,8 @@ func main() {
 	fmt.Println("Finished bootstrapping operator secret")
 
 	fmt.Println("Started bootstrapping portal secret")
-	if data.AppConfig.EnterprisePortalSecretEnabled {
-		err = helpers.BootstrapTykEnterprisePortalSecret()
+	if appArgs.EnterprisePortalSecretEnabled {
+		err = k8sClient.BootstrapTykEnterprisePortalSecret()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -64,13 +76,19 @@ func main() {
 	}
 
 	fmt.Println("Started bootstrapping portal with requests to dashboard")
-	if data.AppConfig.BootstrapPortal {
-		err = helpers.BoostrapPortal(client)
+	if appArgs.BootstrapPortal {
+		err = tykSvc.BoostrapPortal()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 	}
-	fmt.Println("Finished bootstrapping portal")
 
+	// restarting the dashboard to apply the new cname
+	if err = k8sClient.RestartDashboardDeployment(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Finished bootstrapping portal")
 }

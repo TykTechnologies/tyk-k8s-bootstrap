@@ -1,30 +1,16 @@
-package readiness
+package k8s
 
 import (
 	"context"
 	"errors"
 	"fmt"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 	"time"
-	"tyk/tyk/bootstrap/data"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
-func CheckIfRequiredDeploymentsAreReady() error {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return err
-	}
-
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return err
-	}
-
+func (c *Client) CheckIfRequiredDeploymentsAreReady() error {
 	time.Sleep(5 * time.Second)
 
 	var attemptCount int
@@ -33,11 +19,14 @@ func CheckIfRequiredDeploymentsAreReady() error {
 		if attemptCount > 180 {
 			return errors.New("attempted readiness check too many times")
 		}
-		pods, err := clientset.CoreV1().Pods(data.AppConfig.TykPodNamespace).
+		pods, err := c.clientSet.
+			CoreV1().
+			Pods(c.AppArgs.TykPodNamespace).
 			List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return err
 		}
+		
 		fmt.Printf("There are %d other pods in the cluster\n", len(pods.Items)-1)
 
 		var requiredPods []v1.Pod
