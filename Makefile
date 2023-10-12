@@ -26,4 +26,16 @@ build-bootstrap-pre-delete:
 	env $(GO_ARG_LINUX) CGO_ENABLED=0 go build -o "$(BIN_PATH)/$(BOOTSTRAP_APP_PREDELETE_NAME)" -ldflags \
 		"-X main.version=$(MAIN_VERSION)" "$(BOOTSTRAP_CMD_PREDELETE_PATH)"
 
+local-pre-install:
+	go build -o "$(BIN_PATH)/$(BOOTSTRAP_APP_PREINSTALL_NAME)" "$(BOOTSTRAP_CMD_PREINSTALL_PATH)"
+	"$(BIN_PATH)/$(BOOTSTRAP_APP_PREINSTALL_NAME)"
+
+local-post:
+	go build -o "$(BIN_PATH)/$(BOOTSTRAP_APP_POST_NAME)" "$(BOOTSTRAP_CMD_POST_PATH)"
+	"$(BIN_PATH)/$(BOOTSTRAP_APP_POST_NAME)"
+
+local-pre-delete:
+	go build -o "$(BIN_PATH)/$(BOOTSTRAP_APP_PREDELETE_NAME)" "$(BOOTSTRAP_CMD_PREDELETE_PATH)"
+	"$(BIN_PATH)/$(BOOTSTRAP_APP_PREDELETE_NAME)"
+
 build-all: build-bootstrap-post build-bootstrap-pre-delete build-bootstrap-pre-install
