@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"tyk/tyk/bootstrap/data"
 	"tyk/tyk/bootstrap/k8s"
 	"tyk/tyk/bootstrap/tyk"
-	"tyk/tyk/bootstrap/tyk/data"
 )
 
 func main() {

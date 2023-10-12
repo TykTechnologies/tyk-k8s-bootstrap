@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"tyk/tyk/bootstrap/constants"
 )
 
 type AppArguments struct {
@@ -39,9 +38,9 @@ type AppArguments struct {
 
 func InitAppDataPreDelete() *AppArguments {
 	args := AppArguments{}
-	args.OperatorSecretName = os.Getenv(constants.OperatorSecretNameEnvVar)
-	args.EnterprisePortalSecretName = os.Getenv(constants.EnterprisePortalSecretNameEnvVar)
-	args.TykPodNamespace = os.Getenv(constants.TykPodNamespaceEnvVar)
+	args.OperatorSecretName = os.Getenv(OperatorSecretNameEnvVar)
+	args.EnterprisePortalSecretName = os.Getenv(EnterprisePortalSecretNameEnvVar)
+	args.TykPodNamespace = os.Getenv(TykPodNamespaceEnvVar)
 
 	return &args
 }
@@ -58,66 +57,66 @@ func InitAppDataPostInstall() (*AppArguments, error) {
 		TykAdminLastName:     "lastName",
 	}
 
-	debugging := os.Getenv(constants.DebuggingEnvVar)
+	debugging := os.Getenv(DebuggingEnvVar)
 	if debugging != "" {
 		appArgs.debugging, _ = strconv.ParseBool(debugging)
 	}
 
-	appArgs.TykAdminFirstName = os.Getenv(constants.TykAdminFirstNameEnvVar)
-	appArgs.TykAdminLastName = os.Getenv(constants.TykAdminLastNameEnvVar)
-	appArgs.TykAdminEmailAddress = os.Getenv(constants.TykAdminEmailEnvVar)
-	appArgs.TykAdminPassword = os.Getenv(constants.TykAdminPasswordEnvVar)
-	appArgs.TykPodNamespace = os.Getenv(constants.TykPodNamespaceEnvVar)
-	appArgs.DashboardProto = os.Getenv(constants.TykDashboardProtoEnvVar)
-	appArgs.DashboardSvc = os.Getenv(constants.TykDashboardSvcEnvVar)
-	dbPort, err := strconv.ParseInt(os.Getenv(constants.TykDbListenport), 10, 64)
+	appArgs.TykAdminFirstName = os.Getenv(TykAdminFirstNameEnvVar)
+	appArgs.TykAdminLastName = os.Getenv(TykAdminLastNameEnvVar)
+	appArgs.TykAdminEmailAddress = os.Getenv(TykAdminEmailEnvVar)
+	appArgs.TykAdminPassword = os.Getenv(TykAdminPasswordEnvVar)
+	appArgs.TykPodNamespace = os.Getenv(TykPodNamespaceEnvVar)
+	appArgs.DashboardProto = os.Getenv(TykDashboardProtoEnvVar)
+	appArgs.DashboardSvc = os.Getenv(TykDashboardSvcEnvVar)
+	dbPort, err := strconv.ParseInt(os.Getenv(TykDbListenport), 10, 64)
 	if err != nil {
 		return nil, err
 	}
 	appArgs.DashboardPort = int(dbPort)
-	appArgs.DashBoardLicense = os.Getenv(constants.TykDbLicensekeyEnvVar)
-	appArgs.TykAdminSecret = os.Getenv(constants.TykAdminSecretEnvVar)
-	appArgs.CurrentOrgName = os.Getenv(constants.TykOrgNameEnvVar)
-	appArgs.Cname = os.Getenv(constants.TykOrgCnameEnvVar)
+	appArgs.DashBoardLicense = os.Getenv(TykDbLicensekeyEnvVar)
+	appArgs.TykAdminSecret = os.Getenv(TykAdminSecretEnvVar)
+	appArgs.CurrentOrgName = os.Getenv(TykOrgNameEnvVar)
+	appArgs.Cname = os.Getenv(TykOrgCnameEnvVar)
 	appArgs.DashboardUrl = appArgs.dashboardURL()
 
-	dashEnabledRaw := os.Getenv(constants.DashboardEnabledEnvVar)
+	dashEnabledRaw := os.Getenv(DashboardEnabledEnvVar)
 	if dashEnabledRaw != "" {
-		appArgs.IsDashboardEnabled, err = strconv.ParseBool(os.Getenv(constants.DashboardEnabledEnvVar))
+		appArgs.IsDashboardEnabled, err = strconv.ParseBool(os.Getenv(DashboardEnabledEnvVar))
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	operatorSecretEnabledRaw := os.Getenv(constants.OperatorSecretEnabledEnvVar)
+	operatorSecretEnabledRaw := os.Getenv(OperatorSecretEnabledEnvVar)
 	if operatorSecretEnabledRaw != "" {
 		appArgs.OperatorSecretEnabled, err = strconv.ParseBool(operatorSecretEnabledRaw)
 		if err != nil {
 			return nil, err
 		}
 	}
-	appArgs.OperatorSecretName = os.Getenv(constants.OperatorSecretNameEnvVar)
+	appArgs.OperatorSecretName = os.Getenv(OperatorSecretNameEnvVar)
 
-	enterprisePortalSecretEnabledRaw := os.Getenv(constants.EnterprisePortalSecretEnabledEnvVar)
+	enterprisePortalSecretEnabledRaw := os.Getenv(EnterprisePortalSecretEnabledEnvVar)
 	if enterprisePortalSecretEnabledRaw != "" {
 		appArgs.EnterprisePortalSecretEnabled, err = strconv.ParseBool(enterprisePortalSecretEnabledRaw)
 		if err != nil {
 			return nil, err
 		}
 	}
-	appArgs.EnterprisePortalSecretName = os.Getenv(constants.EnterprisePortalSecretNameEnvVar)
+	appArgs.EnterprisePortalSecretName = os.Getenv(EnterprisePortalSecretNameEnvVar)
 
-	appArgs.GatewayAddress = os.Getenv(constants.GatewayAddressEnvVar)
-	bootstrapPortalBoolRaw := os.Getenv(constants.BootstrapPortalEnvVar)
+	appArgs.GatewayAddress = os.Getenv(GatewayAddressEnvVar)
+	bootstrapPortalBoolRaw := os.Getenv(BootstrapPortalEnvVar)
 	if bootstrapPortalBoolRaw != "" {
 		appArgs.BootstrapPortal, err = strconv.ParseBool(bootstrapPortalBoolRaw)
 		if err != nil {
 			return nil, err
 		}
 	}
-	appArgs.DashboardDeploymentName = os.Getenv(constants.TykDashboardDeployEnvVar)
+	appArgs.DashboardDeploymentName = os.Getenv(TykDashboardDeployEnvVar)
 
-	dashboardInsecureSkipVerifyRaw := os.Getenv(constants.TykDashboardInsecureSkipVerify)
+	dashboardInsecureSkipVerifyRaw := os.Getenv(TykDashboardInsecureSkipVerify)
 	if dashboardInsecureSkipVerifyRaw != "" {
 		appArgs.DashboardInsecureSkipVerify, err = strconv.ParseBool(dashboardInsecureSkipVerifyRaw)
 		if err != nil {
@@ -138,24 +137,4 @@ func (a *AppArguments) dashboardURL() string {
 		a.DashboardSvc,
 		a.TykPodNamespace,
 		a.DashboardPort)
-}
-
-type PortalFields struct {
-	JumboCTATitle       string `json:"JumboCTATitle"`
-	SubHeading          string `json:"SubHeading"`
-	JumboCTALink        string `json:"JumboCTALink"`
-	JumboCTALinkTitle   string `json:"JumboCTALinkTitle"`
-	PanelOneContent     string `json:"PanelOneContent"`
-	PanelOneLink        string `json:"PanelOneLink"`
-	PanelOneLinkTitle   string `json:"PanelOneLinkTitle"`
-	PanelOneTitle       string `json:"PanelOneTitle"`
-	PanelThereeContent  string `json:"PanelThereeContent"`
-	PanelThreeContent   string `json:"PanelThreeContent"`
-	PanelThreeLink      string `json:"PanelThreeLink"`
-	PanelThreeLinkTitle string `json:"PanelThreeLinkTitle"`
-	PanelThreeTitle     string `json:"PanelThreeTitle"`
-	PanelTwoContent     string `json:"PanelTwoContent"`
-	PanelTwoLink        string `json:"PanelTwoLink"`
-	PanelTwoLinkTitle   string `json:"PanelTwoLinkTitle"`
-	PanelTwoTitle       string `json:"PanelTwoTitle"`
 }

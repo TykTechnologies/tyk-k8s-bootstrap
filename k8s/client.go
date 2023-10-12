@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"time"
-	"tyk/tyk/bootstrap/tyk/data"
+	"tyk/tyk/bootstrap/data"
 )
 
 type Client struct {

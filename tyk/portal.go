@@ -7,7 +7,7 @@ import (
 	"io"
 	"k8s.io/apimachinery/pkg/util/json"
 	"net/http"
-	"tyk/tyk/bootstrap/tyk/data"
+	"tyk/tyk/bootstrap/tyk/api"
 )
 
 func (s *Service) BoostrapPortal() error {
@@ -37,7 +37,7 @@ func (s *Service) BoostrapPortal() error {
 func (s *Service) SetPortalCname() error {
 	fmt.Println("Setting portal cname")
 
-	cnameReq := data.CnameRequest{Cname: s.appArgs.Cname}
+	cnameReq := api.CnameRequest{Cname: s.appArgs.Cname}
 	reqBody, err := json.Marshal(cnameReq)
 	if err != nil {
 		return err
@@ -66,7 +66,7 @@ func (s *Service) SetPortalCname() error {
 func (s *Service) InitialiseCatalogue() error {
 	fmt.Println("Initialising Catalogue")
 
-	initCatalog := data.InitCatalogReq{OrgId: s.appArgs.OrgId}
+	initCatalog := api.InitCatalogReq{OrgId: s.appArgs.OrgId}
 	reqBody, err := json.Marshal(initCatalog)
 	if err != nil {
 		return err
@@ -83,7 +83,7 @@ func (s *Service) InitialiseCatalogue() error {
 	if err != nil || res.StatusCode != http.StatusOK {
 		return err
 	}
-	resp := data.DashboardGeneralResponse{}
+	resp := api.DashboardGeneralResponse{}
 	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println(err)
@@ -118,7 +118,7 @@ func (s *Service) CreatePortalHomepage() error {
 		return err
 	}
 
-	resp := data.DashboardGeneralResponse{}
+	resp := api.DashboardGeneralResponse{}
 
 	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
@@ -135,13 +135,13 @@ func (s *Service) CreatePortalHomepage() error {
 	return nil
 }
 
-func GetPortalHomepage() data.PortalHomepageRequest {
-	return data.PortalHomepageRequest{
+func GetPortalHomepage() api.PortalHomepageRequest {
+	return api.PortalHomepageRequest{
 		IsHomepage:   true,
 		TemplateName: "",
 		Title:        "Developer portal name",
 		Slug:         "/",
-		Fields: data.PortalFields{
+		Fields: api.PortalFields{
 			JumboCTATitle:       "Tyk Developer Portal",
 			SubHeading:          "Sub Header",
 			JumboCTALink:        "#cta",

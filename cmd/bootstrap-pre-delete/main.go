@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"tyk/tyk/bootstrap/data"
 	"tyk/tyk/bootstrap/k8s"
-	"tyk/tyk/bootstrap/tyk/data"
 )
 
 func main() {

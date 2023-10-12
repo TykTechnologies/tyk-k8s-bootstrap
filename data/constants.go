@@ -1,7 +1,6 @@
-package constants
+package data
 
 const (
-	DebuggingEnvVar                     = "TYK_BOOTSTRAP_DEBUGGING"
 	OperatorSecretEnabledEnvVar         = "OPERATOR_SECRET_ENABLED"
 	EnterprisePortalSecretEnabledEnvVar = "ENTERPRISE_PORTAL_SECRET_ENABLED"
 	BootstrapPortalEnvVar               = "BOOTSTRAP_PORTAL"

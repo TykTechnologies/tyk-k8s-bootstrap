@@ -1,4 +1,4 @@
-package license
+package tyk
 
 import (
 	"errors"
@@ -8,11 +8,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"tyk/tyk/bootstrap/constants"
+	"tyk/tyk/bootstrap/data"
 )
 
-func GetDashboardLicense() (string, error) {
-	license, ok := os.LookupEnv(constants.TykDashboardLicenseEnvVarName)
+func readDashboardLicense() (string, error) {
+	license, ok := os.LookupEnv(data.TykDashboardLicenseEnvVarName)
 	if !ok {
 		return "", errors.New("license env var is not present")
 	}
@@ -24,7 +24,12 @@ func GetDashboardLicense() (string, error) {
 	return license, nil
 }
 
-func ValidateDashboardLicense(license string) (bool, error) {
+func ValidateDashboardLicense() (bool, error) {
+	license, err := readDashboardLicense()
+	if err != nil {
+		return false, err
+	}
+
 	token, _ := jwt.Parse(license, func(token *jwt.Token) (interface{}, error) {
 		return []byte(""), nil
 	})

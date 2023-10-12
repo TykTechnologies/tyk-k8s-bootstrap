@@ -2,7 +2,7 @@ package tyk
 
 import (
 	"net/http"
-	"tyk/tyk/bootstrap/tyk/data"
+	"tyk/tyk/bootstrap/data"
 )
 
 type Service struct {

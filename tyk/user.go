@@ -7,7 +7,7 @@ import (
 	"io"
 	"k8s.io/apimachinery/pkg/util/json"
 	"net/http"
-	"tyk/tyk/bootstrap/tyk/data"
+	"tyk/tyk/bootstrap/tyk/api"
 )
 
 func (s *Service) createUser(dashboardUrl, orgId string) (string, error) {
@@ -28,7 +28,7 @@ func (s *Service) createUser(dashboardUrl, orgId string) (string, error) {
 }
 
 func (s *Service) setUserPassword(userId, authCode, dashboardUrl string) error {
-	newPasswordData := data.ResetPasswordRequest{
+	newPasswordData := api.ResetPasswordRequest{
 		NewPassword:     s.appArgs.TykAdminPassword,
 		UserPermissions: map[string]string{"IsAdmin": "admin"},
 	}
@@ -85,7 +85,7 @@ type NeededUserData struct {
 }
 
 func (s *Service) getUserData(dashboardUrl, orgId string) (NeededUserData, error) {
-	reqBody := data.CreateUserRequest{
+	reqBody := api.CreateUserRequest{
 		OrganisationId:  orgId,
 		FirstName:       s.appArgs.TykAdminFirstName,
 		LastName:        s.appArgs.TykAdminLastName,
@@ -119,7 +119,7 @@ func (s *Service) getUserData(dashboardUrl, orgId string) (NeededUserData, error
 		fmt.Println(err)
 	}
 
-	getUserResponse := data.CreateUserResponse{}
+	getUserResponse := api.CreateUserResponse{}
 	err = json.Unmarshal(bodyBytes, &getUserResponse)
 	if err != nil {
 		return NeededUserData{}, err

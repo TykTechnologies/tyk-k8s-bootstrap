@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"tyk/tyk/bootstrap/tyk/data"
+	"tyk/tyk/bootstrap/tyk/api"
 )
 
 const (
@@ -47,7 +47,7 @@ func (s *Service) CheckForExistingOrganisation() error {
 		fmt.Println(err)
 	}
 
-	orgs := data.OrgResponse{}
+	orgs := api.OrgResponse{}
 	err = json.Unmarshal(bodyBytes, &orgs)
 	if err != nil {
 		return err
@@ -71,7 +71,7 @@ func (s *Service) CheckForExistingOrganisation() error {
 }
 
 func (s *Service) createOrganisation(dashBoardUrl string) (string, error) {
-	createOrgData := data.CreateOrgRequest{
+	createOrgData := api.CreateOrgRequest{
 		OwnerName:    s.appArgs.CurrentOrgName,
 		CnameEnabled: true,
 		Cname:        s.appArgs.Cname,
@@ -101,7 +101,7 @@ func (s *Service) createOrganisation(dashBoardUrl string) (string, error) {
 		fmt.Println(err)
 	}
 
-	createOrgResponse := data.DashboardGeneralResponse{}
+	createOrgResponse := api.DashboardGeneralResponse{}
 	err = json.Unmarshal(bodyBytes, &createOrgResponse)
 	if err != nil {
 		return "", err
