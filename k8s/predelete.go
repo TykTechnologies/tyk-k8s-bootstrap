@@ -8,7 +8,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// maybe not needed?
 func (c *Client) ExecutePreDeleteOperations() error {
 	err := c.deleteOperatorSecret()
 	if err != nil {

@@ -1,4 +1,5 @@
 #!/bin/sh
+
 make build-all
 
 docker build -t tykio/tyk-k8s-bootstrap-pre-install:testing -f ./.container/image/bootstrap-pre-install/Dockerfile ./bin &&

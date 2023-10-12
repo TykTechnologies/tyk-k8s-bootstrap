@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
-	"k8s.io/client-go/tools/clientcmd"
 	"net/http"
 	"os"
 	"tyk/tyk/bootstrap/k8s"
@@ -12,7 +11,7 @@ import (
 )
 
 func main() {
-	k8sClient, err := k8s.K8sClient(clientcmd.NewDefaultClientConfigLoadingRules().GetDefaultFilename())
+	k8sClient, err := k8s.NewClient()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

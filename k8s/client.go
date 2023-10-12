@@ -15,32 +15,26 @@ import (
 type Client struct {
 	AppArgs *data.AppArguments
 
-	kubeconfig string
-	restConfig *rest.Config
-	clientSet  *kubernetes.Clientset
+	clientSet *kubernetes.Clientset
 }
 
-// K8sClient returns a new Client to interact with Kubernetes, based on the provided kubeconfig.
-// If the kubeconfig is an empty string, it uses in-cluster configuration.
-func K8sClient(kubeconfig string) (*Client, error) {
-	cl := &Client{kubeconfig: kubeconfig}
+// NewClient returns a new Client to interact with Kubernetes. It first tries instantiate in-cluster client; otherwise,
+// returns client via reading default kubeconfig located /$HOME/.kube/config
+func NewClient() (*Client, error) {
+	cl := &Client{}
 
 	var err error
+	var config *rest.Config
 
-	if cl.kubeconfig == "" {
-		fmt.Println("using in-cluster configuration")
-		cl.restConfig, err = rest.InClusterConfig()
-	} else {
-		fmt.Printf("using configuration from '%s'\n", kubeconfig)
-		cl.restConfig, err = clientcmd.BuildConfigFromFlags("", cl.kubeconfig)
-	}
-
+	config, err = rest.InClusterConfig()
 	if err != nil {
-		fmt.Printf("failed to generate config, err: %v", err)
-		return nil, err
+		config, err = clientcmd.BuildConfigFromFlags("", clientcmd.NewDefaultClientConfigLoadingRules().GetDefaultFilename())
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	cs, err := kubernetes.NewForConfig(cl.restConfig)
+	cs, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		fmt.Printf("failed to generate client, err: %v", err)
 		return nil, err
