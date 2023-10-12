@@ -28,5 +28,6 @@ const (
 	TykBootstrapLabel                = "tyk.tyk.io/k8s-bootstrap"
 	TykBootstrapDashboardDeployLabel = "tyk-dashboard"
 	TykBootstrapDashboardSvcLabel    = "tyk-dashboard"
+	TykBootstrapPostInstallLabel     = "tyk-k8s-bootstrap-post-install"
 	TykBootstrapReleaseLabel         = "release"
 )

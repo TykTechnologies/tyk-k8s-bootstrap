@@ -3,7 +3,9 @@ package predelete
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/labels"
 	"os"
+	"tyk/tyk/bootstrap/constants"
 	"tyk/tyk/bootstrap/data"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -101,24 +103,33 @@ func PreDeleteEnterprisePortalSecret(clientset *kubernetes.Clientset) error {
 }
 
 func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
-	jobs, err := clientset.BatchV1().Jobs(data.AppConfig.TykPodNamespace).
-		List(context.TODO(), metav1.ListOptions{})
+	ls := metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			constants.TykBootstrapLabel: constants.TykBootstrapPostInstallLabel,
+		},
+	}
+
+	jobs, err := clientset.
+		BatchV1().
+		Jobs(data.AppConfig.TykPodNamespace).
+		List(context.TODO(), metav1.ListOptions{LabelSelector: labels.Set(ls.MatchLabels).String()})
 	if err != nil {
 		return err
 	}
 
 	found := false
 	for _, value := range jobs.Items {
-		if value.Name == os.Getenv("BOOTSTRAP_JOB_NAME") {
-			deletePropagationType := metav1.DeletePropagationBackground
-			err = clientset.BatchV1().Jobs(data.AppConfig.TykPodNamespace).
-				Delete(context.TODO(), value.Name, metav1.DeleteOptions{PropagationPolicy: &deletePropagationType})
-			if err != nil {
-				return err
-			}
-			found = true
-			break
+		deletePropagationType := metav1.DeletePropagationBackground
+
+		err = clientset.
+			BatchV1().
+			Jobs(data.AppConfig.TykPodNamespace).
+			Delete(context.TODO(), value.Name, metav1.DeleteOptions{PropagationPolicy: &deletePropagationType})
+		if err != nil {
+			return err
 		}
+		found = true
+		break
 	}
 
 	if !found {
