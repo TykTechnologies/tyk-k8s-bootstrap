@@ -1,7 +1,12 @@
 package data
 
 import (
+	"context"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"os"
 	"strconv"
 	"tyk/tyk/bootstrap/constants"
@@ -34,6 +39,7 @@ type AppArguments struct {
 	GatewayAdress                 string
 	BootstrapPortal               bool
 	DashboardDeploymentName       string
+	ReleaseName                   string
 }
 
 var AppConfig = AppArguments{
@@ -89,13 +95,18 @@ func InitAppDataPostInstall() error {
 	AppConfig.TykAdminSecret = os.Getenv(constants.TykAdminSecretEnvVar)
 	AppConfig.CurrentOrgName = os.Getenv(constants.TykOrgNameEnvVar)
 	AppConfig.Cname = os.Getenv(constants.TykOrgCnameEnvVar)
-	AppConfig.DashboardUrl = GetDashboardUrl()
+	AppConfig.ReleaseName = os.Getenv(constants.ReleaseNameEnvVar)
 	dashEnabledRaw := os.Getenv(constants.DashboardEnabledEnvVar)
 	if dashEnabledRaw != "" {
 		AppConfig.IsDashboardEnabled, err = strconv.ParseBool(os.Getenv(constants.DashboardEnabledEnvVar))
 		if err != nil {
 			return err
 		}
+	}
+
+	if AppConfig.IsDashboardEnabled {
+		discoverDashboardSvc()
+		AppConfig.DashboardUrl = GetDashboardUrl()
 	}
 
 	operatorSecretEnabledRaw := os.Getenv(constants.OperatorSecretEnabledEnvVar)
@@ -132,6 +143,43 @@ func InitAppDataPostInstall() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func discoverDashboardSvc() error {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return err
+	}
+
+	c, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return err
+	}
+
+	ls := metav1.LabelSelector{MatchLabels: map[string]string{
+		constants.TykBootstrapLabel: constants.TykBootstrapDashboardSvcLabel,
+	}}
+	if AppConfig.ReleaseName != "" {
+		ls.MatchLabels[constants.TykBootstrapReleaseLabel] = AppConfig.ReleaseName
+	}
+
+	services, err := c.
+		CoreV1().
+		Services(AppConfig.TykPodNamespace).
+		List(context.TODO(),
+			metav1.ListOptions{
+				LabelSelector: labels.Set(ls.MatchLabels).String(),
+			},
+		)
+	if err != nil {
+		return err
+	}
+
+	for _, service := range services.Items {
+		AppConfig.DashboardSvc = service.Name
 	}
 
 	return nil
