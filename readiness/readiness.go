@@ -57,17 +57,11 @@ func CheckIfRequiredDeploymentsAreReady() error {
 				}
 			}
 		}
-		fmt.Printf("The following pods have containers that are not ready: ")
+		fmt.Printf("The following pods have containers that are NOT ready: ")
 		for pod, _ := range notReadyPods {
 			fmt.Println(pod)
 		}
 
-		if len(notReadyPods) != 0 {
-			fmt.Println("TYK PRO IS NOT READY")
-		} else {
-			fmt.Println("TYK PRO IS READY TO BE BOOTSTRAPPED")
-			return nil
-		}
 		time.Sleep(2 * time.Second)
 	}
 }
