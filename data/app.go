@@ -105,7 +105,9 @@ func InitAppDataPostInstall() error {
 	}
 
 	if AppConfig.IsDashboardEnabled {
-		discoverDashboardSvc()
+		if err := discoverDashboardSvc(); err != nil {
+			return err
+		}
 		AppConfig.DashboardUrl = GetDashboardUrl()
 	}
 
@@ -148,6 +150,8 @@ func InitAppDataPostInstall() error {
 	return nil
 }
 
+// discoverDashboardSvc lists Service objects with constants.TykBootstrapReleaseLabel label that has
+// constants.TykBootstrapDashboardSvcLabel value and gets this Service's name and assign it to DashboardSvc field.
 func discoverDashboardSvc() error {
 	config, err := rest.InClusterConfig()
 	if err != nil {
