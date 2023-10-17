@@ -65,8 +65,12 @@ spec:
               value: "tyk-operator-conf"
             - name: ENTERPRISE_PORTAL_SECRET_ENABLED
               value: "true"
+            - name: DEVELOPER_PORTAL_SECRET_ENABLED
+              value: "true"
             - name: ENTERPRISE_PORTAL_SECRET_NAME
               value: "tyk-enterprise-portal-conf"
+            - name: DEVELOPER_PORTAL_SECRET_NAME
+              value: "tyk-dev-portal-conf"
             - name: BOOTSTRAP_DASHBOARD
               value: "true"
             - name: GATEWAY_ADDRESS

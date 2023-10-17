@@ -31,6 +31,8 @@ type AppArguments struct {
 	OperatorSecretName            string
 	EnterprisePortalSecretEnabled bool
 	EnterprisePortalSecretName    string
+	DeveloperPortalSecretEnabled  bool
+	DeveloperPortalSecretName     string
 	GatewayAdress                 string
 	BootstrapPortal               bool
 	DashboardDeploymentName       string
@@ -40,6 +42,7 @@ var AppConfig = AppArguments{
 	IsDashboardEnabled:            false,
 	OperatorSecretEnabled:         false,
 	EnterprisePortalSecretEnabled: false,
+	DeveloperPortalSecretEnabled:  false,
 	BootstrapPortal:               false,
 	DashboardProto:                "",
 	DashboardHost:                 "",
@@ -61,6 +64,7 @@ var AppConfig = AppArguments{
 	DashboardInsecureSkipVerify:   false,
 	OperatorSecretName:            "",
 	EnterprisePortalSecretName:    "",
+	DeveloperPortalSecretName:     "",
 	GatewayAdress:                 "",
 	DashboardDeploymentName:       "",
 }
@@ -68,6 +72,7 @@ var AppConfig = AppArguments{
 func InitAppDataPreDelete() error {
 	AppConfig.OperatorSecretName = os.Getenv(constants.OperatorSecretNameEnvVar)
 	AppConfig.EnterprisePortalSecretName = os.Getenv(constants.EnterprisePortalSecretNameEnvVar)
+	AppConfig.DeveloperPortalSecretName = os.Getenv(constants.DeveloperPortalSecretNameEnvVar)
 	AppConfig.TykPodNamespace = os.Getenv(constants.TykPodNamespaceEnvVar)
 	return nil
 }
@@ -115,6 +120,15 @@ func InitAppDataPostInstall() error {
 		}
 	}
 	AppConfig.EnterprisePortalSecretName = os.Getenv(constants.EnterprisePortalSecretNameEnvVar)
+
+	developerPortalSecretEnabledRaw := os.Getenv(constants.DeveloperPortalSecretEnabledEnvVar)
+	if developerPortalSecretEnabledRaw != "" {
+		AppConfig.DeveloperPortalSecretEnabled, err = strconv.ParseBool(developerPortalSecretEnabledRaw)
+		if err != nil {
+			return err
+		}
+	}
+	AppConfig.DeveloperPortalSecretName = os.Getenv(constants.EnterprisePortalSecretNameEnvVar)
 
 	AppConfig.GatewayAdress = os.Getenv(constants.GatewayAddressEnvVar)
 	bootstrapPortalBoolRaw := os.Getenv(constants.BootstrapPortalEnvVar)

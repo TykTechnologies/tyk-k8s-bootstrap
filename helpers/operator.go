@@ -70,7 +70,7 @@ func CreateTykOperatorSecret(clientset *kubernetes.Clientset) error {
 	return nil
 }
 
-func BootstrapTykEnterprisePortalSecret() error {
+func BootstrapTykPortalSecret() error {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return err
@@ -88,18 +88,24 @@ func BootstrapTykEnterprisePortalSecret() error {
 	}
 
 	for _, value := range secrets.Items {
-		if data.AppConfig.EnterprisePortalSecretName == value.Name {
+		if data.AppConfig.EnterprisePortalSecretName == value.Name ||
+			data.AppConfig.DeveloperPortalSecretName == value.Name {
 			err = clientset.CoreV1().Secrets(data.AppConfig.TykPodNamespace).
 				Delete(context.TODO(), value.Name, v1.DeleteOptions{})
 			if err != nil {
 				return err
 			}
-			fmt.Println("A previously created enterprise portal secret was identified and deleted")
+			fmt.Println("A previously created portal secret was identified and deleted")
 			break
 		}
 	}
 
-	err = CreateTykEnterprisePortalSecret(clientset)
+	err = CreateTykPortalSecret(clientset, data.AppConfig.EnterprisePortalSecretName)
+	if err != nil {
+		return err
+	}
+
+	err = CreateTykPortalSecret(clientset, data.AppConfig.DeveloperPortalSecretName)
 	if err != nil {
 		return err
 	}
@@ -107,13 +113,13 @@ func BootstrapTykEnterprisePortalSecret() error {
 	return nil
 }
 
-func CreateTykEnterprisePortalSecret(clientset *kubernetes.Clientset) error {
+func CreateTykPortalSecret(clientset *kubernetes.Clientset, secretName string) error {
 	secretData := map[string][]byte{
 		TykAuth: []byte(data.AppConfig.UserAuth),
 		TykOrg:  []byte(data.AppConfig.OrgId),
 	}
 
-	objectMeta := v1.ObjectMeta{Name: data.AppConfig.EnterprisePortalSecretName}
+	objectMeta := v1.ObjectMeta{Name: secretName}
 
 	secret := v12.Secret{
 		ObjectMeta: objectMeta,

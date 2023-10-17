@@ -3,11 +3,13 @@ package constants
 const (
 	OperatorSecretEnabledEnvVar         = "OPERATOR_SECRET_ENABLED"
 	EnterprisePortalSecretEnabledEnvVar = "ENTERPRISE_PORTAL_SECRET_ENABLED"
+	DeveloperPortalSecretEnabledEnvVar  = "DEVELOPER_PORTAL_SECRET_ENABLED"
 	BootstrapPortalEnvVar               = "BOOTSTRAP_PORTAL"
 	TykDashboardDeployEnvVar            = "TYK_DASHBOARD_DEPLOY"
 	GatewayAddressEnvVar                = "GATEWAY_ADDRESS"
 	OperatorSecretNameEnvVar            = "OPERATOR_SECRET_NAME"
 	EnterprisePortalSecretNameEnvVar    = "ENTERPRISE_PORTAL_SECRET_NAME"
+	DeveloperPortalSecretNameEnvVar     = "DEVELOPER_PORTAL_SECRET_NAME"
 	TykAdminFirstNameEnvVar             = "TYK_ADMIN_FIRST_NAME"
 	TykAdminLastNameEnvVar              = "TYK_ADMIN_LAST_NAME"
 	TykAdminEmailEnvVar                 = "TYK_ADMIN_EMAIL"
