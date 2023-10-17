@@ -103,36 +103,40 @@ func PreDeleteEnterprisePortalSecret(clientset *kubernetes.Clientset) error {
 
 // PreDeleteBootstrappingJobs deletes all jobs within the release namespace, that has specific label.
 func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
+	// Usually, the raw strings in label selectors are not recommended.
 	jobs, err := clientset.
 		BatchV1().
 		Jobs(data.AppConfig.TykPodNamespace).
-		List(context.TODO(), metav1.ListOptions{})
+		List(
+			context.TODO(),
+			metav1.ListOptions{
+				LabelSelector: fmt.Sprintf("%s", constants.TykBootstrapLabel),
+			},
+		)
 	if err != nil {
 		return err
 	}
 
-	found := false
+	var errCascading error
 	for _, job := range jobs.Items {
-		_, exists := job.Labels[constants.TykBootstrapLabel]
-		if exists {
+		jobLabel, exists := job.ObjectMeta.Labels[constants.TykBootstrapLabel]
+		if !exists {
+			continue
+		}
+
+		// Do not need to delete pre-delete job. It will be deleted by Helm.
+		if jobLabel != constants.TykBootstrapPreDeleteLabel {
 			deletePropagationType := metav1.DeletePropagationBackground
 
-			err = clientset.
+			err2 := clientset.
 				BatchV1().
 				Jobs(data.AppConfig.TykPodNamespace).
 				Delete(context.TODO(), job.Name, metav1.DeleteOptions{PropagationPolicy: &deletePropagationType})
-			if err != nil {
-				return err
+			if err2 != nil {
+				errCascading = err2
 			}
-
-			found = true
 		}
 	}
 
-	if !found {
-		fmt.Println("A previously created bootstrapping job has not been identified")
-	} else {
-		fmt.Println("A previously created bootstrapping job was identified and deleted")
-	}
-	return nil
+	return errCascading
 }
