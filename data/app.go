@@ -177,7 +177,7 @@ func discoverDashboardSvc() error {
 		return fmt.Errorf("svc/%v/%v has no open ports\n", service.Name, service.Namespace)
 	}
 	if len(service.Spec.Ports) > 1 {
-		fmt.Printf("[WARNING] Found multiple open ports in svc/%v/%v \n", service.Name, service.Namespace)
+		fmt.Printf("[WARNING] Found multiple open ports in svc/%v/%v\n", service.Name, service.Namespace)
 	}
 
 	if len(service.Spec.Ports) > 0 {
