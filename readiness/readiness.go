@@ -61,7 +61,7 @@ func CheckIfRequiredDeploymentsAreReady() error {
 		if len(notReadyPods) == 0 {
 			return nil
 		}
-		
+
 		fmt.Printf("The following pods have containers that are NOT ready: ")
 		for pod, _ := range notReadyPods {
 			fmt.Println(pod)

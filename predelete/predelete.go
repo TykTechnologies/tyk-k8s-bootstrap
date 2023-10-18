@@ -119,12 +119,8 @@ func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
 
 	var errCascading error
 	for _, job := range jobs.Items {
-		jobLabel, exists := job.ObjectMeta.Labels[constants.TykBootstrapLabel]
-		if !exists {
-			continue
-		}
-
 		// Do not need to delete pre-delete job. It will be deleted by Helm.
+		jobLabel := job.ObjectMeta.Labels[constants.TykBootstrapLabel]
 		if jobLabel != constants.TykBootstrapPreDeleteLabel {
 			deletePropagationType := metav1.DeletePropagationBackground
 
