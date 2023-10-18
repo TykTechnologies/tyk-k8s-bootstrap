@@ -180,9 +180,7 @@ func discoverDashboardSvc() error {
 		fmt.Printf("[WARNING] Found multiple open ports in svc/%v/%v\n", service.Name, service.Namespace)
 	}
 
-	if len(service.Spec.Ports) > 0 {
-		AppConfig.DashboardPort = service.Spec.Ports[0].Port
-	}
+	AppConfig.DashboardPort = service.Spec.Ports[0].Port
 	AppConfig.DashboardSvc = service.Name
 
 	return nil
