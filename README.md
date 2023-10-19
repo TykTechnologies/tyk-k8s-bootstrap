@@ -9,7 +9,7 @@ via tyk-helm-charts.
 
 ## What it does?
 
-### 1. Tyk post delpoyment bootstrapping
+### 1. Tyk post deployment bootstrapping
 a. Creates a basic organization with the values specified in the env vars
 via the tyk-helm charts
 <br>

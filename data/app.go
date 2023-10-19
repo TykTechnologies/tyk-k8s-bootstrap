@@ -1,7 +1,12 @@
 package data
 
 import (
+	"context"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"os"
 	"strconv"
 	"tyk/tyk/bootstrap/constants"
@@ -9,7 +14,7 @@ import (
 
 type AppArguments struct {
 	DashboardHost                 string
-	DashboardPort                 int
+	DashboardPort                 int32
 	DashBoardLicense              string
 	TykAdminSecret                string
 	CurrentOrgName                string
@@ -31,38 +36,20 @@ type AppArguments struct {
 	OperatorSecretName            string
 	EnterprisePortalSecretEnabled bool
 	EnterprisePortalSecretName    string
-	GatewayAdress                 string
 	BootstrapPortal               bool
 	DashboardDeploymentName       string
+	ReleaseName                   string
 }
 
 var AppConfig = AppArguments{
-	IsDashboardEnabled:            false,
-	OperatorSecretEnabled:         false,
-	EnterprisePortalSecretEnabled: false,
-	BootstrapPortal:               false,
-	DashboardProto:                "",
-	DashboardHost:                 "",
-	DashboardPort:                 3000,
-	DashBoardLicense:              "",
-	TykAdminSecret:                "12345",
-	CurrentOrgName:                "TYKTYK",
-	Cname:                         "tykCName",
-	TykAdminPassword:              "123456",
-	TykAdminFirstName:             "firstName",
-	TykAdminEmailAddress:          "tyk@tyk.io",
-	TykAdminLastName:              "lastName",
-	UserAuth:                      "",
-	OrgId:                         "",
-	CatalogId:                     "",
-	DashboardUrl:                  "",
-	TykPodNamespace:               "",
-	DashboardSvc:                  "",
-	DashboardInsecureSkipVerify:   false,
-	OperatorSecretName:            "",
-	EnterprisePortalSecretName:    "",
-	GatewayAdress:                 "",
-	DashboardDeploymentName:       "",
+	DashboardPort:        3000,
+	TykAdminSecret:       "12345",
+	CurrentOrgName:       "TYKTYK",
+	Cname:                "tykCName",
+	TykAdminPassword:     "123456",
+	TykAdminFirstName:    "firstName",
+	TykAdminEmailAddress: "tyk@tyk.io",
+	TykAdminLastName:     "lastName",
 }
 
 func InitAppDataPreDelete() error {
@@ -73,31 +60,20 @@ func InitAppDataPreDelete() error {
 }
 
 func InitAppDataPostInstall() error {
-	var err error
-
 	AppConfig.TykAdminFirstName = os.Getenv(constants.TykAdminFirstNameEnvVar)
 	AppConfig.TykAdminLastName = os.Getenv(constants.TykAdminLastNameEnvVar)
 	AppConfig.TykAdminEmailAddress = os.Getenv(constants.TykAdminEmailEnvVar)
 	AppConfig.TykAdminPassword = os.Getenv(constants.TykAdminPasswordEnvVar)
 	AppConfig.TykPodNamespace = os.Getenv(constants.TykPodNamespaceEnvVar)
 	AppConfig.DashboardProto = os.Getenv(constants.TykDashboardProtoEnvVar)
-	AppConfig.DashboardSvc = os.Getenv(constants.TykDashboardSvcEnvVar)
-
-	dbPortRaw := os.Getenv(constants.TykDbListenport)
-	if dbPortRaw != "" {
-		dbPort, err := strconv.ParseInt(dbPortRaw, 10, 64)
-		if err != nil {
-			return fmt.Errorf("failed to parse %v, err: %v", constants.TykDbListenport, err)
-		}
-
-		AppConfig.DashboardPort = int(dbPort)
-	}
 
 	AppConfig.DashBoardLicense = os.Getenv(constants.TykDbLicensekeyEnvVar)
 	AppConfig.TykAdminSecret = os.Getenv(constants.TykAdminSecretEnvVar)
 	AppConfig.CurrentOrgName = os.Getenv(constants.TykOrgNameEnvVar)
 	AppConfig.Cname = os.Getenv(constants.TykOrgCnameEnvVar)
-	AppConfig.DashboardUrl = GetDashboardUrl()
+	AppConfig.ReleaseName = os.Getenv(constants.ReleaseNameEnvVar)
+
+	var err error
 
 	dashEnabledRaw := os.Getenv(constants.DashboardEnabledEnvVar)
 	if dashEnabledRaw != "" {
@@ -105,6 +81,18 @@ func InitAppDataPostInstall() error {
 		if err != nil {
 			return fmt.Errorf("failed to parse %v, err: %v", constants.DashboardEnabledEnvVar, err)
 		}
+	}
+
+	if AppConfig.IsDashboardEnabled {
+		if err := discoverDashboardSvc(); err != nil {
+			return err
+		}
+		AppConfig.DashboardUrl = fmt.Sprintf("%s://%s.%s.svc.cluster.local:%d",
+			AppConfig.DashboardProto,
+			AppConfig.DashboardSvc,
+			AppConfig.TykPodNamespace,
+			AppConfig.DashboardPort,
+		)
 	}
 
 	operatorSecretEnabledRaw := os.Getenv(constants.OperatorSecretEnabledEnvVar)
@@ -126,7 +114,6 @@ func InitAppDataPostInstall() error {
 	}
 
 	AppConfig.EnterprisePortalSecretName = os.Getenv(constants.EnterprisePortalSecretNameEnvVar)
-	AppConfig.GatewayAdress = os.Getenv(constants.GatewayAddressEnvVar)
 
 	bootstrapPortalBoolRaw := os.Getenv(constants.BootstrapPortalEnvVar)
 	if bootstrapPortalBoolRaw != "" {
@@ -148,10 +135,55 @@ func InitAppDataPostInstall() error {
 	return nil
 }
 
-func GetDashboardUrl() string {
-	return fmt.Sprintf("%s://%s.%s.svc.cluster.local:%d",
-		AppConfig.DashboardProto,
-		AppConfig.DashboardSvc,
-		AppConfig.TykPodNamespace,
-		AppConfig.DashboardPort)
+// discoverDashboardSvc lists Service objects with constants.TykBootstrapReleaseLabel label that has
+// constants.TykBootstrapDashboardSvcLabel value and gets this Service's metadata name, and port and
+// updates DashboardSvc and DashboardPort fields.
+func discoverDashboardSvc() error {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return err
+	}
+
+	c, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return err
+	}
+
+	ls := metav1.LabelSelector{MatchLabels: map[string]string{
+		constants.TykBootstrapLabel: constants.TykBootstrapDashboardSvcLabel,
+	}}
+	if AppConfig.ReleaseName != "" {
+		ls.MatchLabels[constants.TykBootstrapReleaseLabel] = AppConfig.ReleaseName
+	}
+
+	l := labels.Set(ls.MatchLabels).String()
+
+	services, err := c.
+		CoreV1().
+		Services(AppConfig.TykPodNamespace).
+		List(context.TODO(), metav1.ListOptions{LabelSelector: l})
+	if err != nil {
+		return err
+	}
+
+	if len(services.Items) == 0 {
+		return fmt.Errorf("failed to find services with label %v\n", l)
+	}
+
+	if len(services.Items) > 1 {
+		fmt.Printf("[WARNING] Found multiple services with label %v\n", l)
+	}
+
+	service := services.Items[0]
+	if len(service.Spec.Ports) == 0 {
+		return fmt.Errorf("svc/%v/%v has no open ports\n", service.Name, service.Namespace)
+	}
+	if len(service.Spec.Ports) > 1 {
+		fmt.Printf("[WARNING] Found multiple open ports in svc/%v/%v\n", service.Name, service.Namespace)
+	}
+
+	AppConfig.DashboardPort = service.Spec.Ports[0].Port
+	AppConfig.DashboardSvc = service.Name
+
+	return nil
 }
