@@ -57,19 +57,19 @@ func (s *Service) setUserPassword(userId, authCode, dashboardUrl string) error {
 }
 
 func (s *Service) GenerateDashboardCredentials() error {
-	orgId, err := s.createOrganisation(s.appArgs.DashboardUrl)
+	orgId, err := s.createOrganisation(s.appArgs.DashboardSvcAddr)
 	if err != nil {
 		return err
 	}
 
-	s.appArgs.OrgId = orgId
+	s.appArgs.TykOrgId = orgId
 
-	userAuth, err := s.createUser(s.appArgs.DashboardUrl, orgId)
+	userAuth, err := s.createUser(s.appArgs.DashboardSvcAddr, orgId)
 	if err != nil {
 		return err
 	}
 
-	s.appArgs.UserAuth = userAuth
+	s.appArgs.TykUserAuth = userAuth
 
 	return nil
 }

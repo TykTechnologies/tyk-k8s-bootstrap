@@ -2,8 +2,10 @@ package k8s
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -13,7 +15,7 @@ import (
 )
 
 type Client struct {
-	AppArgs *data.AppArguments
+	AppArgs *data.BootstrapConf
 
 	clientSet *kubernetes.Clientset
 }
@@ -46,15 +48,99 @@ func NewClient() (*Client, error) {
 }
 
 func (c *Client) RestartDashboardDeployment() error {
-	deploymentsClient := c.clientSet.
-		AppsV1().
-		Deployments(c.AppArgs.TykPodNamespace)
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return err
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return err
+	}
+
+	if c.AppArgs.DashboardDeploymentName == "" {
+		ls := metav1.LabelSelector{MatchLabels: map[string]string{
+			data.TykBootstrapLabel: data.TykBootstrapDashboardDeployLabel,
+		}}
+
+		if c.AppArgs.ReleaseName != "" {
+			ls.MatchLabels[data.TykBootstrapReleaseLabel] = c.AppArgs.ReleaseName
+		}
+
+		deployments, err := clientset.
+			AppsV1().
+			Deployments(c.AppArgs.ReleaseNamespace).
+			List(
+				context.TODO(),
+				metav1.ListOptions{
+					LabelSelector: labels.Set(ls.MatchLabels).String(),
+				},
+			)
+		if err != nil {
+			return errors.New(fmt.Sprintf("failed to list Tyk Dashboard Deployment, err: %v", err))
+		}
+
+		for _, deployment := range deployments.Items {
+			c.AppArgs.DashboardDeploymentName = deployment.ObjectMeta.Name
+		}
+	}
 
 	timeStamp := fmt.Sprintf(`{"spec": {"template": {"metadata": {"annotations": {"kubectl.kubernetes.io/restartedAt": "%s"}}}}}`,
 		time.Now().Format("20060102150405"))
 
-	_, err := deploymentsClient.Patch(context.TODO(), c.AppArgs.DashboardDeploymentName,
-		types.StrategicMergePatchType, []byte(timeStamp), metav1.PatchOptions{})
+	_, err = clientset.
+		AppsV1().
+		Deployments(c.AppArgs.ReleaseName).
+		Patch(
+			context.TODO(),
+			c.AppArgs.DashboardDeploymentName,
+			types.StrategicMergePatchType,
+			[]byte(timeStamp),
+			metav1.PatchOptions{},
+		)
 
 	return err
+}
+
+// DiscoverDashboardSvc lists Service objects with TykBootstrapReleaseLabel label that has
+// TykBootstrapDashboardSvcLabel value and gets this Service's metadata name, and port and
+// updates DashboardSvcName and DashboardSvcPort fields.
+func (c *Client) DiscoverDashboardSvc() error {
+	ls := metav1.LabelSelector{MatchLabels: map[string]string{
+		data.TykBootstrapLabel: data.TykBootstrapDashboardSvcLabel,
+	}}
+	if c.AppArgs.ReleaseName != "" {
+		ls.MatchLabels[data.TykBootstrapReleaseLabel] = c.AppArgs.ReleaseName
+	}
+
+	l := labels.Set(ls.MatchLabels).String()
+
+	services, err := c.clientSet.
+		CoreV1().
+		Services(c.AppArgs.ReleaseNamespace).
+		List(context.TODO(), metav1.ListOptions{LabelSelector: l})
+	if err != nil {
+		return err
+	}
+
+	if len(services.Items) == 0 {
+		return fmt.Errorf("failed to find services with label %v\n", l)
+	}
+
+	if len(services.Items) > 1 {
+		fmt.Printf("[WARNING] Found multiple services with label %v\n", l)
+	}
+
+	service := services.Items[0]
+	if len(service.Spec.Ports) == 0 {
+		return fmt.Errorf("svc/%v/%v has no open ports\n", service.Name, service.Namespace)
+	}
+	if len(service.Spec.Ports) > 1 {
+		fmt.Printf("[WARNING] Found multiple open ports in svc/%v/%v\n", service.Name, service.Namespace)
+	}
+
+	c.AppArgs.DashboardSvcPort = service.Spec.Ports[0].Port
+	c.AppArgs.DashboardSvcName = service.Name
+
+	return nil
 }

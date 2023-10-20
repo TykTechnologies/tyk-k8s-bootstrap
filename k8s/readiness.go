@@ -21,12 +21,12 @@ func (c *Client) CheckIfRequiredDeploymentsAreReady() error {
 		}
 		pods, err := c.clientSet.
 			CoreV1().
-			Pods(c.AppArgs.TykPodNamespace).
+			Pods(c.AppArgs.ReleaseNamespace).
 			List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return err
 		}
-		
+
 		fmt.Printf("There are %d other pods in the cluster\n", len(pods.Items)-1)
 
 		var requiredPods []v1.Pod

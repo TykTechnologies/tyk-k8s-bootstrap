@@ -12,7 +12,7 @@ import (
 func (c *Client) BootstrapTykOperatorSecret() error {
 	secrets, err := c.clientSet.
 		CoreV1().
-		Secrets(c.AppArgs.TykPodNamespace).
+		Secrets(c.AppArgs.ReleaseNamespace).
 		List(context.TODO(), metaV1.ListOptions{})
 	if err != nil {
 		return err
@@ -22,7 +22,7 @@ func (c *Client) BootstrapTykOperatorSecret() error {
 		if value.Name == c.AppArgs.OperatorSecretName {
 			err = c.clientSet.
 				CoreV1().
-				Secrets(c.AppArgs.TykPodNamespace).
+				Secrets(c.AppArgs.ReleaseNamespace).
 				Delete(context.TODO(), value.Name, metaV1.DeleteOptions{})
 			if err != nil {
 				return err
@@ -43,10 +43,10 @@ func (c *Client) BootstrapTykOperatorSecret() error {
 
 func (c *Client) createTykOperatorSecret() error {
 	secretData := map[string][]byte{
-		tyk.TykAuth: []byte(c.AppArgs.UserAuth),
-		tyk.TykOrg:  []byte(c.AppArgs.OrgId),
+		tyk.TykAuth: []byte(c.AppArgs.TykUserAuth),
+		tyk.TykOrg:  []byte(c.AppArgs.TykOrgId),
 		tyk.TykMode: []byte(tyk.TykModePro),
-		tyk.TykUrl:  []byte(c.AppArgs.DashboardUrl),
+		tyk.TykUrl:  []byte(c.AppArgs.DashboardSvcAddr),
 	}
 
 	objectMeta := metaV1.ObjectMeta{Name: c.AppArgs.OperatorSecretName}
@@ -58,7 +58,7 @@ func (c *Client) createTykOperatorSecret() error {
 
 	_, err := c.clientSet.
 		CoreV1().
-		Secrets(c.AppArgs.TykPodNamespace).
+		Secrets(c.AppArgs.ReleaseNamespace).
 		Create(context.TODO(), &secret, metaV1.CreateOptions{})
 	if err != nil {
 		return err
@@ -70,7 +70,7 @@ func (c *Client) createTykOperatorSecret() error {
 func (c *Client) BootstrapTykEnterprisePortalSecret() error {
 	secrets, err := c.clientSet.
 		CoreV1().
-		Secrets(c.AppArgs.TykPodNamespace).
+		Secrets(c.AppArgs.ReleaseNamespace).
 		List(context.TODO(), metaV1.ListOptions{})
 	if err != nil {
 		return err
@@ -80,7 +80,7 @@ func (c *Client) BootstrapTykEnterprisePortalSecret() error {
 		if c.AppArgs.EnterprisePortalSecretName == value.Name {
 			err = c.clientSet.
 				CoreV1().
-				Secrets(c.AppArgs.TykPodNamespace).
+				Secrets(c.AppArgs.ReleaseNamespace).
 				Delete(context.TODO(), value.Name, metaV1.DeleteOptions{})
 			if err != nil {
 				return err
@@ -101,8 +101,8 @@ func (c *Client) BootstrapTykEnterprisePortalSecret() error {
 
 func (c *Client) createTykEnterprisePortalSecret() error {
 	secretData := map[string][]byte{
-		tyk.TykAuth: []byte(c.AppArgs.UserAuth),
-		tyk.TykOrg:  []byte(c.AppArgs.OrgId),
+		tyk.TykAuth: []byte(c.AppArgs.TykUserAuth),
+		tyk.TykOrg:  []byte(c.AppArgs.TykOrgId),
 	}
 
 	objectMeta := metaV1.ObjectMeta{Name: c.AppArgs.EnterprisePortalSecretName}
@@ -114,7 +114,7 @@ func (c *Client) createTykEnterprisePortalSecret() error {
 
 	_, err := c.clientSet.
 		CoreV1().
-		Secrets(c.AppArgs.TykPodNamespace).
+		Secrets(c.AppArgs.ReleaseNamespace).
 		Create(context.TODO(), &secret, metaV1.CreateOptions{})
 	if err != nil {
 		return err

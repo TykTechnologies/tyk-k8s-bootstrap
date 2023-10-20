@@ -37,19 +37,19 @@ func (s *Service) BoostrapPortal() error {
 func (s *Service) setPortalCname() error {
 	fmt.Println("Setting portal cname")
 
-	cnameReq := api.CnameRequest{Cname: s.appArgs.Cname}
+	cnameReq := api.CnameRequest{Cname: s.appArgs.TykPortalCname}
 	reqBody, err := json.Marshal(cnameReq)
 	if err != nil {
 		return err
 	}
 	reqData := bytes.NewReader(reqBody)
 
-	req, err := http.NewRequest("PUT", s.appArgs.DashboardUrl+ApiPortalCnameEndpoint, reqData)
+	req, err := http.NewRequest("PUT", s.appArgs.DashboardSvcAddr+ApiPortalCnameEndpoint, reqData)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Authorization", s.appArgs.UserAuth)
+	req.Header.Set("Authorization", s.appArgs.TykUserAuth)
 
 	res, err := s.httpClient.Do(req)
 	if err != nil {
@@ -66,18 +66,18 @@ func (s *Service) setPortalCname() error {
 func (s *Service) initialiseCatalogue() error {
 	fmt.Println("Initialising Catalogue")
 
-	initCatalog := api.InitCatalogReq{OrgId: s.appArgs.OrgId}
+	initCatalog := api.InitCatalogReq{OrgId: s.appArgs.TykOrgId}
 	reqBody, err := json.Marshal(initCatalog)
 	if err != nil {
 		return err
 	}
 	reqData := bytes.NewReader(reqBody)
-	req, err := http.NewRequest("POST", s.appArgs.DashboardUrl+ApiPortalCatalogueEndpoint, reqData)
+	req, err := http.NewRequest("POST", s.appArgs.DashboardSvcAddr+ApiPortalCatalogueEndpoint, reqData)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Authorization", s.appArgs.UserAuth)
+	req.Header.Set("Authorization", s.appArgs.TykUserAuth)
 
 	res, err := s.httpClient.Do(req)
 	if err != nil || res.StatusCode != http.StatusOK {
@@ -93,7 +93,6 @@ func (s *Service) initialiseCatalogue() error {
 	if err != nil {
 		return err
 	}
-	s.appArgs.CatalogId = resp.Message
 
 	return nil
 }
@@ -108,8 +107,8 @@ func (s *Service) createPortalHomepage() error {
 	}
 
 	reqData := bytes.NewReader(reqBody)
-	req, err := http.NewRequest("POST", s.appArgs.DashboardUrl+ApiPortalPagesEndpoint, reqData)
-	req.Header.Set("Authorization", s.appArgs.UserAuth)
+	req, err := http.NewRequest("POST", s.appArgs.DashboardSvcAddr+ApiPortalPagesEndpoint, reqData)
+	req.Header.Set("Authorization", s.appArgs.TykUserAuth)
 
 	if err != nil {
 		return err
@@ -155,8 +154,8 @@ func portalHomePageRequest() api.PortalHomepageRequest {
 func (s *Service) createPortalDefaultSettings() error {
 	fmt.Println("Creating bootstrap default settings")
 
-	req, err := http.NewRequest("POST", s.appArgs.DashboardUrl+ApiPortalConfigurationEndpoint, nil)
-	req.Header.Set("Authorization", s.appArgs.UserAuth)
+	req, err := http.NewRequest("POST", s.appArgs.DashboardSvcAddr+ApiPortalConfigurationEndpoint, nil)
+	req.Header.Set("Authorization", s.appArgs.TykUserAuth)
 
 	if err != nil {
 		return err
@@ -166,6 +165,6 @@ func (s *Service) createPortalDefaultSettings() error {
 	if err != nil || res.StatusCode != http.StatusOK {
 		return err
 	}
-	
+
 	return nil
 }

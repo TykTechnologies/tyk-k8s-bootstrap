@@ -57,7 +57,7 @@ func (c *Client) deleteOperatorSecret() error {
 
 func (c *Client) deleteEnterprisePortalSecret() error {
 	fmt.Println("Running pre delete hook")
-	ns := c.AppArgs.TykPodNamespace
+	ns := c.AppArgs.ReleaseNamespace
 
 	secrets, err := c.clientSet.CoreV1().Secrets(ns).
 		List(context.TODO(), metav1.ListOptions{})
@@ -92,7 +92,7 @@ func (c *Client) deleteBootstrappingJobs() error {
 	// Usually, the raw strings in label selectors are not recommended.
 	jobs, err := c.clientSet.
 		BatchV1().
-		Jobs(c.AppArgs.TykPodNamespace).
+		Jobs(c.AppArgs.ReleaseNamespace).
 		List(
 			context.TODO(),
 			metav1.ListOptions{
@@ -112,7 +112,7 @@ func (c *Client) deleteBootstrappingJobs() error {
 
 			err2 := c.clientSet.
 				BatchV1().
-				Jobs(c.AppArgs.TykPodNamespace).
+				Jobs(c.AppArgs.ReleaseNamespace).
 				Delete(context.TODO(), job.Name, metav1.DeleteOptions{PropagationPolicy: &deletePropagationType})
 			if err2 != nil {
 				errCascading = err2

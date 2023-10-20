@@ -29,7 +29,7 @@ const (
 func (s *Service) CheckForExistingOrganisation() error {
 	fmt.Println("Checking for existing organisations")
 
-	orgsApiEndpoint := s.appArgs.DashboardUrl + AdminOrganisationsEndpoint
+	orgsApiEndpoint := s.appArgs.DashboardSvcAddr + AdminOrganisationsEndpoint
 	req, err := http.NewRequest("GET", orgsApiEndpoint, nil)
 	if err != nil {
 		return err
@@ -55,8 +55,8 @@ func (s *Service) CheckForExistingOrganisation() error {
 
 	if len(orgs.Organisations) > 0 {
 		for _, organisation := range orgs.Organisations {
-			if organisation["owner_name"] == s.appArgs.CurrentOrgName ||
-				organisation["cname"] == s.appArgs.Cname {
+			if organisation["owner_name"] == s.appArgs.TykOrgName ||
+				organisation["cname"] == s.appArgs.TykPortalCname {
 				return errors.New("there shouldn't be any organisations, please " +
 					"disable bootstrapping to avoid losing data or delete " +
 					"already existing organisations")
@@ -72,9 +72,9 @@ func (s *Service) CheckForExistingOrganisation() error {
 
 func (s *Service) createOrganisation(dashBoardUrl string) (string, error) {
 	createOrgData := api.CreateOrgRequest{
-		OwnerName:    s.appArgs.CurrentOrgName,
+		OwnerName:    s.appArgs.TykOrgName,
 		CnameEnabled: true,
-		Cname:        s.appArgs.Cname,
+		Cname:        s.appArgs.TykPortalCname,
 	}
 
 	reqBodyBytes, err := json.Marshal(createOrgData)

@@ -7,9 +7,9 @@ import (
 
 type Service struct {
 	httpClient http.Client
-	appArgs    *data.AppArguments
+	appArgs    *data.BootstrapConf
 }
 
-func NewTykService(c http.Client, args *data.AppArguments) Service {
+func NewTykService(c http.Client, args *data.BootstrapConf) Service {
 	return Service{httpClient: c, appArgs: args}
 }
