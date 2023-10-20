@@ -17,8 +17,6 @@ func (s *Service) createUser(dashboardUrl, orgId string) (string, error) {
 		return "", err
 	}
 
-	fmt.Println(userData)
-
 	err = s.setUserPassword(userData.UserId, userData.AuthCode, dashboardUrl)
 	if err != nil {
 		return "", err
@@ -51,10 +49,7 @@ func (s *Service) setUserPassword(userId, authCode, dashboardUrl string) error {
 		return err
 	}
 
-	b, _ := io.ReadAll(res.Body)
-
 	if res.StatusCode != 200 {
-		fmt.Println(string(b))
 		return errors.New("resetting password did not work")
 	}
 
@@ -124,8 +119,6 @@ func (s *Service) getUserData(dashboardUrl, orgId string) (NeededUserData, error
 	if err != nil {
 		return NeededUserData{}, err
 	}
-
-	fmt.Println("getuserresponse", getUserResponse)
 
 	return NeededUserData{UserId: getUserResponse.Meta.ID, AuthCode: getUserResponse.Message}, nil
 }

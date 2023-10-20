@@ -11,22 +11,22 @@ import (
 )
 
 func (s *Service) BoostrapPortal() error {
-	err := s.CreatePortalDefaultSettings()
+	err := s.createPortalDefaultSettings()
 	if err != nil {
 		return err
 	}
 
-	err = s.InitialiseCatalogue()
+	err = s.initialiseCatalogue()
 	if err != nil {
 		return err
 	}
 
-	err = s.CreatePortalHomepage()
+	err = s.createPortalHomepage()
 	if err != nil {
 		return err
 	}
 
-	err = s.SetPortalCname()
+	err = s.setPortalCname()
 	if err != nil {
 		return err
 	}
@@ -34,7 +34,7 @@ func (s *Service) BoostrapPortal() error {
 	return nil
 }
 
-func (s *Service) SetPortalCname() error {
+func (s *Service) setPortalCname() error {
 	fmt.Println("Setting portal cname")
 
 	cnameReq := api.CnameRequest{Cname: s.appArgs.Cname}
@@ -63,7 +63,7 @@ func (s *Service) SetPortalCname() error {
 	return nil
 }
 
-func (s *Service) InitialiseCatalogue() error {
+func (s *Service) initialiseCatalogue() error {
 	fmt.Println("Initialising Catalogue")
 
 	initCatalog := api.InitCatalogReq{OrgId: s.appArgs.OrgId}
@@ -98,10 +98,10 @@ func (s *Service) InitialiseCatalogue() error {
 	return nil
 }
 
-func (s *Service) CreatePortalHomepage() error {
+func (s *Service) createPortalHomepage() error {
 	fmt.Println("Creating portal homepage")
 
-	homepageContents := GetPortalHomepage()
+	homepageContents := portalHomePageRequest()
 	reqBody, err := json.Marshal(homepageContents)
 	if err != nil {
 		return err
@@ -110,32 +110,20 @@ func (s *Service) CreatePortalHomepage() error {
 	reqData := bytes.NewReader(reqBody)
 	req, err := http.NewRequest("POST", s.appArgs.DashboardUrl+ApiPortalPagesEndpoint, reqData)
 	req.Header.Set("Authorization", s.appArgs.UserAuth)
+
 	if err != nil {
 		return err
 	}
+
 	res, err := s.httpClient.Do(req)
 	if err != nil || res.StatusCode != http.StatusOK {
 		return err
 	}
 
-	resp := api.DashboardGeneralResponse{}
-
-	bodyBytes, err := io.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	err = json.Unmarshal(bodyBytes, &resp)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(bodyBytes))
-
 	return nil
 }
 
-func GetPortalHomepage() api.PortalHomepageRequest {
+func portalHomePageRequest() api.PortalHomepageRequest {
 	return api.PortalHomepageRequest{
 		IsHomepage:   true,
 		TemplateName: "",
@@ -164,7 +152,7 @@ func GetPortalHomepage() api.PortalHomepageRequest {
 
 }
 
-func (s *Service) CreatePortalDefaultSettings() error {
+func (s *Service) createPortalDefaultSettings() error {
 	fmt.Println("Creating bootstrap default settings")
 
 	req, err := http.NewRequest("POST", s.appArgs.DashboardUrl+ApiPortalConfigurationEndpoint, nil)
@@ -173,17 +161,11 @@ func (s *Service) CreatePortalDefaultSettings() error {
 	if err != nil {
 		return err
 	}
+
 	res, err := s.httpClient.Do(req)
 	if err != nil || res.StatusCode != http.StatusOK {
 		return err
 	}
-
-	resBytes, err := io.ReadAll(res.Body)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(resBytes))
-
+	
 	return nil
 }
