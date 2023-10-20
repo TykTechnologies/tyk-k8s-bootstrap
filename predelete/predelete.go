@@ -3,9 +3,9 @@ package predelete
 import (
 	"context"
 	"fmt"
+	"github.com/TykTechnologies/tyk-k8s-bootstrap/constants"
+	"github.com/TykTechnologies/tyk-k8s-bootstrap/data"
 	"os"
-	"tyk/tyk/bootstrap/constants"
-	"tyk/tyk/bootstrap/data"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"

@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/TykTechnologies/tyk-k8s-bootstrap/data"
+	"github.com/TykTechnologies/tyk-k8s-bootstrap/predelete"
 	"os"
-	"tyk/tyk/bootstrap/data"
-	"tyk/tyk/bootstrap/predelete"
 )
 
 func main() {

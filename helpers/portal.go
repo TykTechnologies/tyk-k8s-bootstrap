@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/TykTechnologies/tyk-k8s-bootstrap/constants"
+	"github.com/TykTechnologies/tyk-k8s-bootstrap/data"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -15,8 +17,6 @@ import (
 	"k8s.io/client-go/rest"
 	"net/http"
 	"time"
-	"tyk/tyk/bootstrap/constants"
-	"tyk/tyk/bootstrap/data"
 )
 
 func BoostrapPortal(client http.Client) error {

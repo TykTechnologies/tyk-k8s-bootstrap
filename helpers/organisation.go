@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/TykTechnologies/tyk-k8s-bootstrap/data"
 	"io"
 	"net/http"
-	"tyk/tyk/bootstrap/data"
 
 	"k8s.io/apimachinery/pkg/util/json"
 )

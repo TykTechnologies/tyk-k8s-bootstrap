@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/TykTechnologies/tyk-k8s-bootstrap/data"
 	v1 "k8s.io/api/core/v1"
 	"strings"
 	"time"
-	"tyk/tyk/bootstrap/data"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"

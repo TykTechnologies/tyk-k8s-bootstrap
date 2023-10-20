@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/TykTechnologies/tyk-k8s-bootstrap/preinstallation"
 	"os"
-	"tyk/tyk/bootstrap/preinstallation"
 )
 
 func main() {

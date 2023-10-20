@@ -5,7 +5,7 @@ package preinstallation
 
 import (
 	"errors"
-	"tyk/tyk/bootstrap/license"
+	"github.com/TykTechnologies/tyk-k8s-bootstrap/license"
 )
 
 // PreHookInstall runs all required license validation operations that are required in pre-install hook.
