@@ -11,19 +11,20 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 )
 
-const AdminOrganisationsEndpoint = "/admin/organisations"
-const ApiUsersActionsResetEndpoint = "%s/api/users/%s/actions/reset"
-const ApiPortalCatalogueEndpoint = "/api/portal/catalogue"
-const ApiPortalPagesEndpoint = "/api/portal/pages"
-const ApiPortalConfigurationEndpoint = "/api/portal/configuration"
-const ApiPortalCnameEndpoint = "/api/portal/cname"
+const (
+	AdminOrganisationsEndpoint     = "/admin/organisations"
+	ApiUsersActionsResetEndpoint   = "%s/api/users/%s/actions/reset"
+	ApiPortalCatalogueEndpoint     = "/api/portal/catalogue"
+	ApiPortalPagesEndpoint         = "/api/portal/pages"
+	ApiPortalConfigurationEndpoint = "/api/portal/configuration"
+	ApiPortalCnameEndpoint         = "/api/portal/cname"
 
-const TykModePro = "pro"
-
-const TykAuth = "TYK_AUTH"
-const TykOrg = "TYK_ORG"
-const TykMode = "TYK_MODE"
-const TykUrl = "TYK_URL"
+	TykModePro = "pro"
+	TykAuth    = "TYK_AUTH"
+	TykOrg     = "TYK_ORG"
+	TykMode    = "TYK_MODE"
+	TykUrl     = "TYK_URL"
+)
 
 func CheckForExistingOrganisation(client http.Client) error {
 	fmt.Println("Checking for existing organisations")
@@ -33,6 +34,7 @@ func CheckForExistingOrganisation(client http.Client) error {
 	if err != nil {
 		return err
 	}
+
 	req.Header.Set("admin-auth", data.AppConfig.TykAdminSecret)
 	req.Header.Set("Content-Type", "application/json")
 	res, err := client.Do(req)
@@ -44,8 +46,6 @@ func CheckForExistingOrganisation(client http.Client) error {
 	if err != nil {
 		fmt.Println(err)
 	}
-	bodyString := string(bodyBytes)
-	fmt.Println(bodyString)
 
 	orgs := OrgResponse{}
 	err = json.Unmarshal(bodyBytes, &orgs)
@@ -100,8 +100,6 @@ func CreateOrganisation(client http.Client, dashBoardUrl string) (string, error)
 	if err != nil {
 		fmt.Println(err)
 	}
-	bodyString := string(bodyBytes)
-	fmt.Println(bodyString)
 
 	createOrgResponse := DashboardGeneralResponse{}
 	err = json.Unmarshal(bodyBytes, &createOrgResponse)

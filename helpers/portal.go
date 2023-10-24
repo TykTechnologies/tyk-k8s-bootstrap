@@ -6,15 +6,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
-	"time"
-	"tyk/tyk/bootstrap/data"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"net/http"
+	"time"
+	"tyk/tyk/bootstrap/constants"
+	"tyk/tyk/bootstrap/data"
 )
 
 func BoostrapPortal(client http.Client) error {
@@ -99,18 +101,21 @@ func InitialiseCatalogue(client http.Client) error {
 	if err != nil || res.StatusCode != http.StatusOK {
 		return err
 	}
+
 	resp := DashboardGeneralResponse{}
+
 	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	err = json.Unmarshal(bodyBytes, &resp)
 	if err != nil {
 		return err
 	}
+
 	data.AppConfig.CatalogId = resp.Message
 
-	fmt.Println(string(bodyBytes))
 	return nil
 }
 
@@ -137,12 +142,11 @@ func CreatePortalHomepage(client http.Client) error {
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	err = json.Unmarshal(bodyBytes, &resp)
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(string(bodyBytes))
 
 	return nil
 }
@@ -213,17 +217,11 @@ func CreatePortalDefaultSettings(client http.Client) error {
 	if err != nil {
 		return err
 	}
+
 	res, err := client.Do(req)
 	if err != nil || res.StatusCode != http.StatusOK {
 		return err
 	}
-
-	resBytes, err := io.ReadAll(res.Body)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(resBytes))
 
 	return nil
 }
@@ -239,12 +237,45 @@ func RestartDashboard() error {
 		return err
 	}
 
-	deploymentsClient := clientset.AppsV1().Deployments(data.AppConfig.TykPodNamespace)
+	if data.AppConfig.DashboardDeploymentName == "" {
+		ls := metav1.LabelSelector{MatchLabels: map[string]string{
+			constants.TykBootstrapLabel: constants.TykBootstrapDashboardDeployLabel,
+		}}
+
+		if data.AppConfig.ReleaseName != "" {
+			ls.MatchLabels[constants.TykBootstrapReleaseLabel] = data.AppConfig.ReleaseName
+		}
+
+		deployments, err := clientset.
+			AppsV1().
+			Deployments(data.AppConfig.TykPodNamespace).
+			List(
+				context.TODO(),
+				metav1.ListOptions{
+					LabelSelector: labels.Set(ls.MatchLabels).String(),
+				},
+			)
+		if err != nil {
+			return errors.New(fmt.Sprintf("failed to list Tyk Dashboard Deployment, err: %v", err))
+		}
+
+		for _, deployment := range deployments.Items {
+			data.AppConfig.DashboardDeploymentName = deployment.ObjectMeta.Name
+		}
+	}
+
 	timeStamp := fmt.Sprintf(`{"spec": {"template": {"metadata": {"annotations": {"kubectl.kubernetes.io/restartedAt": "%s"}}}}}`,
 		time.Now().Format("20060102150405"))
 
-	_, err = deploymentsClient.Patch(context.TODO(), data.AppConfig.DashboardDeploymentName,
-		types.StrategicMergePatchType, []byte(timeStamp), metav1.PatchOptions{})
-
+	_, err = clientset.
+		AppsV1().
+		Deployments(data.AppConfig.TykPodNamespace).
+		Patch(
+			context.TODO(),
+			data.AppConfig.DashboardDeploymentName,
+			types.StrategicMergePatchType,
+			[]byte(timeStamp),
+			metav1.PatchOptions{},
+		)
 	return err
 }
