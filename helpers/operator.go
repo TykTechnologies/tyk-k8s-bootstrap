@@ -100,16 +100,19 @@ func BootstrapTykPortalSecret() error {
 		}
 	}
 
-	err = CreateTykPortalSecret(clientset, data.AppConfig.EnterprisePortalSecretName)
-	if err != nil {
-		return err
+	if data.AppConfig.EnterprisePortalSecretName != "" {
+		err = CreateTykPortalSecret(clientset, data.AppConfig.EnterprisePortalSecretName)
+		if err != nil {
+			return err
+		}
 	}
 
-	err = CreateTykPortalSecret(clientset, data.AppConfig.DeveloperPortalSecretName)
-	if err != nil {
-		return err
+	if data.AppConfig.DeveloperPortalSecretName != "" {
+		err = CreateTykPortalSecret(clientset, data.AppConfig.DeveloperPortalSecretName)
+		if err != nil {
+			return err
+		}
 	}
-
 	return nil
 }
 
