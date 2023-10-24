@@ -125,7 +125,7 @@ func InitAppDataPostInstall() error {
 			return err
 		}
 	}
-	AppConfig.DeveloperPortalSecretName = os.Getenv(constants.EnterprisePortalSecretNameEnvVar)
+	AppConfig.DeveloperPortalSecretName = os.Getenv(constants.DeveloperPortalSecretNameEnvVar)
 
 	bootstrapPortalBoolRaw := os.Getenv(constants.BootstrapPortalEnvVar)
 	if bootstrapPortalBoolRaw != "" {
