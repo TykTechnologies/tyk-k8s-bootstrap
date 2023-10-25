@@ -38,7 +38,6 @@ type AppArguments struct {
 	EnterprisePortalSecretName    string
 	BootstrapPortal               bool
 	DashboardDeploymentName       string
-	ReleaseName                   string
 }
 
 var AppConfig = AppArguments{
@@ -71,7 +70,6 @@ func InitAppDataPostInstall() error {
 	AppConfig.TykAdminSecret = os.Getenv(constants.TykAdminSecretEnvVar)
 	AppConfig.CurrentOrgName = os.Getenv(constants.TykOrgNameEnvVar)
 	AppConfig.Cname = os.Getenv(constants.TykOrgCnameEnvVar)
-	AppConfig.ReleaseName = os.Getenv(constants.ReleaseNameEnvVar)
 
 	var err error
 
@@ -152,9 +150,6 @@ func discoverDashboardSvc() error {
 	ls := metav1.LabelSelector{MatchLabels: map[string]string{
 		constants.TykBootstrapLabel: constants.TykBootstrapDashboardSvcLabel,
 	}}
-	if AppConfig.ReleaseName != "" {
-		ls.MatchLabels[constants.TykBootstrapReleaseLabel] = AppConfig.ReleaseName
-	}
 
 	l := labels.Set(ls.MatchLabels).String()
 
