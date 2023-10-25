@@ -242,10 +242,6 @@ func RestartDashboard() error {
 			constants.TykBootstrapLabel: constants.TykBootstrapDashboardDeployLabel,
 		}}
 
-		if data.AppConfig.ReleaseName != "" {
-			ls.MatchLabels[constants.TykBootstrapReleaseLabel] = data.AppConfig.ReleaseName
-		}
-
 		deployments, err := clientset.
 			AppsV1().
 			Deployments(data.AppConfig.TykPodNamespace).
