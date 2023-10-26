@@ -81,8 +81,7 @@ func PreDeletePortalSecret(clientset *kubernetes.Clientset) error {
 
 	notFound := true
 	for _, value := range secrets.Items {
-		if data.AppConfig.EnterprisePortalSecretName == value.Name ||
-			data.AppConfig.DeveloperPortalSecretName == value.Name {
+		if data.AppConfig.DeveloperPortalSecretName == value.Name {
 			err = clientset.CoreV1().Secrets(ns).
 				Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
 

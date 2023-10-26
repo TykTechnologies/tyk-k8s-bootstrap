@@ -88,8 +88,7 @@ func BootstrapTykPortalSecret() error {
 	}
 
 	for _, value := range secrets.Items {
-		if data.AppConfig.EnterprisePortalSecretName == value.Name ||
-			data.AppConfig.DeveloperPortalSecretName == value.Name {
+		if data.AppConfig.DeveloperPortalSecretName == value.Name {
 			err = clientset.CoreV1().Secrets(data.AppConfig.TykPodNamespace).
 				Delete(context.TODO(), value.Name, v1.DeleteOptions{})
 			if err != nil {
@@ -97,13 +96,6 @@ func BootstrapTykPortalSecret() error {
 			}
 			fmt.Println("A previously created portal secret was identified and deleted")
 			break
-		}
-	}
-
-	if data.AppConfig.EnterprisePortalSecretName != "" {
-		err = CreateTykPortalSecret(clientset, data.AppConfig.EnterprisePortalSecretName)
-		if err != nil {
-			return err
 		}
 	}
 

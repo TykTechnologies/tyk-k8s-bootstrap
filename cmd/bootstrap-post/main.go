@@ -55,7 +55,7 @@ func main() {
 	fmt.Println("Finished bootstrapping operator secret")
 
 	fmt.Println("Started bootstrapping portal secret")
-	if data.AppConfig.EnterprisePortalSecretEnabled || data.AppConfig.DeveloperPortalSecretEnabled {
+	if data.AppConfig.DeveloperPortalSecretEnabled {
 		err = helpers.BootstrapTykPortalSecret()
 		if err != nil {
 			fmt.Println(err)
