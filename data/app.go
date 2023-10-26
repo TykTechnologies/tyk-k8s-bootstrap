@@ -13,31 +13,31 @@ import (
 )
 
 type AppArguments struct {
-	DashboardHost                 string
-	DashboardPort                 int32
-	DashBoardLicense              string
-	TykAdminSecret                string
-	CurrentOrgName                string
-	TykAdminPassword              string
-	Cname                         string
-	TykAdminFirstName             string
-	TykAdminLastName              string
-	TykAdminEmailAddress          string
-	UserAuth                      string
-	OrgId                         string
-	CatalogId                     string
-	DashboardUrl                  string
-	DashboardProto                string
-	TykPodNamespace               string
-	DashboardSvc                  string
-	DashboardInsecureSkipVerify   bool
-	IsDashboardEnabled            bool
-	OperatorSecretEnabled         bool
-	OperatorSecretName            string
-	EnterprisePortalSecretEnabled bool
-	EnterprisePortalSecretName    string
-	BootstrapPortal               bool
-	DashboardDeploymentName       string
+	DashboardHost                string
+	DashboardPort                int32
+	DashBoardLicense             string
+	TykAdminSecret               string
+	CurrentOrgName               string
+	TykAdminPassword             string
+	Cname                        string
+	TykAdminFirstName            string
+	TykAdminLastName             string
+	TykAdminEmailAddress         string
+	UserAuth                     string
+	OrgId                        string
+	CatalogId                    string
+	DashboardUrl                 string
+	DashboardProto               string
+	TykPodNamespace              string
+	DashboardSvc                 string
+	DashboardInsecureSkipVerify  bool
+	IsDashboardEnabled           bool
+	OperatorSecretEnabled        bool
+	OperatorSecretName           string
+	DeveloperPortalSecretEnabled bool
+	DeveloperPortalSecretName    string
+	BootstrapPortal              bool
+	DashboardDeploymentName      string
 }
 
 var AppConfig = AppArguments{
@@ -53,7 +53,7 @@ var AppConfig = AppArguments{
 
 func InitAppDataPreDelete() error {
 	AppConfig.OperatorSecretName = os.Getenv(constants.OperatorSecretNameEnvVar)
-	AppConfig.EnterprisePortalSecretName = os.Getenv(constants.EnterprisePortalSecretNameEnvVar)
+	AppConfig.DeveloperPortalSecretName = os.Getenv(constants.DeveloperPortalSecretNameEnvVar)
 	AppConfig.TykPodNamespace = os.Getenv(constants.TykPodNamespaceEnvVar)
 	return nil
 }
@@ -103,15 +103,14 @@ func InitAppDataPostInstall() error {
 
 	AppConfig.OperatorSecretName = os.Getenv(constants.OperatorSecretNameEnvVar)
 
-	enterprisePortalSecretEnabledRaw := os.Getenv(constants.EnterprisePortalSecretEnabledEnvVar)
-	if enterprisePortalSecretEnabledRaw != "" {
-		AppConfig.EnterprisePortalSecretEnabled, err = strconv.ParseBool(enterprisePortalSecretEnabledRaw)
+	developerPortalSecretEnabledRaw := os.Getenv(constants.DeveloperPortalSecretEnabledEnvVar)
+	if developerPortalSecretEnabledRaw != "" {
+		AppConfig.DeveloperPortalSecretEnabled, err = strconv.ParseBool(developerPortalSecretEnabledRaw)
 		if err != nil {
-			return fmt.Errorf("failed to parse %v, err: %v", constants.EnterprisePortalSecretEnabledEnvVar, err)
+			return err
 		}
 	}
-
-	AppConfig.EnterprisePortalSecretName = os.Getenv(constants.EnterprisePortalSecretNameEnvVar)
+	AppConfig.DeveloperPortalSecretName = os.Getenv(constants.DeveloperPortalSecretNameEnvVar)
 
 	bootstrapPortalBoolRaw := os.Getenv(constants.BootstrapPortalEnvVar)
 	if bootstrapPortalBoolRaw != "" {
