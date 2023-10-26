@@ -27,20 +27,9 @@ jobs:
         with:
           go-version: 1.17.x
       - name: Run GoReleaser
-        if: |
-          !contains(github.ref, 'beta')
-          && !contains(github.ref, 'rc')
         uses: goreleaser/goreleaser-action@v2
         with:
           version: latest
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Run GoReleaser Beta
-        if: |
-          contains(github.ref, 'beta')
-          || contains(github.ref, 'rc')
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          version: latest
-          args: release --rm-dist -f goreleaser-beta.yaml
