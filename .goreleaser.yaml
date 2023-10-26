@@ -131,7 +131,6 @@ dockers:
       - "tykio/tyk-k8s-bootstrap-pre-install:latest-arm64v8"
       - "tykio/tyk-k8s-bootstrap-pre-install:v{{ .Major }}{{ if .Prerelease}}-{{ .Prerelease }}{{ end }}-arm64v8"
       - "tykio/tyk-k8s-bootstrap-pre-install:v{{ .Major }}.{{ .Minor }}{{ if .Prerelease}}-{{ .Prerelease }}{{ end }}-arm64v8"
-      - "tykio/tyk-k8s-bootstrap-pre-install:v{{ .Major }}.{{ .Minor }}"
       - "tykio/tyk-k8s-bootstrap-pre-install:{{ .Tag }}-arm64v8"
     goos: linux
     goarch: arm64
