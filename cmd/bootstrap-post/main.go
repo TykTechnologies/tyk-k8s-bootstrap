@@ -3,11 +3,11 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/TykTechnologies/tyk-k8s-bootstrap/data"
+	"github.com/TykTechnologies/tyk-k8s-bootstrap/helpers"
+	"github.com/TykTechnologies/tyk-k8s-bootstrap/readiness"
 	"net/http"
 	"os"
-	"tyk/tyk/bootstrap/data"
-	"tyk/tyk/bootstrap/helpers"
-	"tyk/tyk/bootstrap/readiness"
 )
 
 func main() {

@@ -3,12 +3,12 @@ package license
 import (
 	"errors"
 	"fmt"
+	"github.com/TykTechnologies/tyk-k8s-bootstrap/constants"
 	"github.com/golang-jwt/jwt"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-	"tyk/tyk/bootstrap/constants"
 )
 
 func GetDashboardLicense() (string, error) {

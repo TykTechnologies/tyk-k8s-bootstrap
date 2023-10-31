@@ -3,11 +3,11 @@ package helpers
 import (
 	"context"
 	"fmt"
+	"github.com/TykTechnologies/tyk-k8s-bootstrap/data"
 	v12 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"tyk/tyk/bootstrap/data"
 )
 
 func BootstrapTykOperatorSecret() error {
