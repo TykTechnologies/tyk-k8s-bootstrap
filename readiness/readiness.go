@@ -33,7 +33,7 @@ func CheckIfRequiredDeploymentsAreReady() error {
 		if attemptCount > 180 {
 			return errors.New("attempted readiness check too many times")
 		}
-		pods, err := clientset.CoreV1().Pods(data.AppConfig.TykPodNamespace).
+		pods, err := clientset.CoreV1().Pods(data.BootstrapConf.K8s.ReleaseNamespace).
 			List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return err

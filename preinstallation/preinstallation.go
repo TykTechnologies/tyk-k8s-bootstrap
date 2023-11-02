@@ -5,17 +5,13 @@ package preinstallation
 
 import (
 	"errors"
+	"tyk/tyk/bootstrap/data"
 	"tyk/tyk/bootstrap/license"
 )
 
 // PreHookInstall runs all required license validation operations that are required in pre-install hook.
 func PreHookInstall() error {
-	dashboardLicenseKey, err := license.GetDashboardLicense()
-	if err != nil {
-		return err
-	}
-
-	licenseIsValid, err := license.ValidateDashboardLicense(dashboardLicenseKey)
+	licenseIsValid, err := license.ValidateDashboardLicense(data.BootstrapConf.Tyk.DashboardLicense)
 	if err != nil {
 		return err
 	}

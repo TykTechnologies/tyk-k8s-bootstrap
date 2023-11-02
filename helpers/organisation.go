@@ -29,13 +29,13 @@ const (
 func CheckForExistingOrganisation(client http.Client) error {
 	fmt.Println("Checking for existing organisations")
 
-	orgsApiEndpoint := data.AppConfig.DashboardUrl + AdminOrganisationsEndpoint
+	orgsApiEndpoint := data.BootstrapConf.K8s.DashboardSvcUrl + AdminOrganisationsEndpoint
 	req, err := http.NewRequest("GET", orgsApiEndpoint, nil)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("admin-auth", data.AppConfig.TykAdminSecret)
+	req.Header.Set("admin-auth", data.BootstrapConf.Tyk.Admin.Secret)
 	req.Header.Set("Content-Type", "application/json")
 	res, err := client.Do(req)
 	if err != nil {
@@ -54,8 +54,8 @@ func CheckForExistingOrganisation(client http.Client) error {
 	}
 	if len(orgs.Organisations) > 0 {
 		for _, organisation := range orgs.Organisations {
-			if organisation["owner_name"] == data.AppConfig.CurrentOrgName ||
-				organisation["cname"] == data.AppConfig.Cname {
+			if organisation["owner_name"] == data.BootstrapConf.Tyk.Org.Name ||
+				organisation["cname"] == data.BootstrapConf.Tyk.Org.Cname {
 				return errors.New("there shouldn't be any organisations, please " +
 					"disable bootstrapping to avoid losing data or delete " +
 					"already existing organisations")
@@ -76,9 +76,9 @@ type CreateOrgStruct struct {
 
 func CreateOrganisation(client http.Client, dashBoardUrl string) (string, error) {
 	createOrgData := CreateOrgStruct{
-		OwnerName:    data.AppConfig.CurrentOrgName,
+		OwnerName:    data.BootstrapConf.Tyk.Org.Name,
 		CnameEnabled: true,
-		Cname:        data.AppConfig.Cname,
+		Cname:        data.BootstrapConf.Tyk.Org.Cname,
 	}
 	reqBodyBytes, err := json.Marshal(createOrgData)
 	if err != nil {
@@ -89,7 +89,7 @@ func CreateOrganisation(client http.Client, dashBoardUrl string) (string, error)
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("admin-auth", data.AppConfig.TykAdminSecret)
+	req.Header.Set("admin-auth", data.BootstrapConf.Tyk.Admin.Secret)
 	req.Header.Set("Content-Type", "application/json")
 	res, err := client.Do(req)
 	if err != nil {

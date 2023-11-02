@@ -21,15 +21,15 @@ func BootstrapTykOperatorSecret() error {
 		return err
 	}
 
-	secrets, err := clientset.CoreV1().Secrets(data.AppConfig.TykPodNamespace).
+	secrets, err := clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
 		List(context.TODO(), v1.ListOptions{})
 	if err != nil {
 		return err
 	}
 
 	for _, value := range secrets.Items {
-		if value.Name == data.AppConfig.OperatorSecretName {
-			err = clientset.CoreV1().Secrets(data.AppConfig.TykPodNamespace).
+		if value.Name == data.BootstrapConf.OperatorKubernetesSecretName {
+			err = clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
 				Delete(context.TODO(), value.Name, v1.DeleteOptions{})
 			if err != nil {
 				return err
@@ -49,19 +49,19 @@ func BootstrapTykOperatorSecret() error {
 
 func CreateTykOperatorSecret(clientset *kubernetes.Clientset) error {
 	secretData := map[string][]byte{
-		TykAuth: []byte(data.AppConfig.UserAuth),
-		TykOrg:  []byte(data.AppConfig.OrgId),
+		TykAuth: []byte(data.BootstrapConf.Tyk.UserAuth),
+		TykOrg:  []byte(data.BootstrapConf.Tyk.OrgId),
 		TykMode: []byte(TykModePro),
-		TykUrl:  []byte(data.AppConfig.DashboardUrl),
+		TykUrl:  []byte(data.BootstrapConf.K8s.DashboardSvcUrl),
 	}
 
-	objectMeta := v1.ObjectMeta{Name: data.AppConfig.OperatorSecretName}
+	objectMeta := v1.ObjectMeta{Name: data.BootstrapConf.OperatorKubernetesSecretName}
 
 	secret := v12.Secret{
 		ObjectMeta: objectMeta,
 		Data:       secretData,
 	}
-	_, err := clientset.CoreV1().Secrets(data.AppConfig.TykPodNamespace).
+	_, err := clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
 		Create(context.TODO(), &secret, v1.CreateOptions{})
 	if err != nil {
 		return err
@@ -81,15 +81,15 @@ func BootstrapTykPortalSecret() error {
 		return err
 	}
 
-	secrets, err := clientset.CoreV1().Secrets(data.AppConfig.TykPodNamespace).
+	secrets, err := clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
 		List(context.TODO(), v1.ListOptions{})
 	if err != nil {
 		return err
 	}
 
 	for _, value := range secrets.Items {
-		if data.AppConfig.DeveloperPortalSecretName == value.Name {
-			err = clientset.CoreV1().Secrets(data.AppConfig.TykPodNamespace).
+		if data.BootstrapConf.DevPortalKubernetesSecretName == value.Name {
+			err = clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
 				Delete(context.TODO(), value.Name, v1.DeleteOptions{})
 			if err != nil {
 				return err
@@ -99,8 +99,8 @@ func BootstrapTykPortalSecret() error {
 		}
 	}
 
-	if data.AppConfig.DeveloperPortalSecretName != "" {
-		err = CreateTykPortalSecret(clientset, data.AppConfig.DeveloperPortalSecretName)
+	if data.BootstrapConf.DevPortalKubernetesSecretName != "" {
+		err = CreateTykPortalSecret(clientset, data.BootstrapConf.DevPortalKubernetesSecretName)
 		if err != nil {
 			return err
 		}
@@ -110,8 +110,8 @@ func BootstrapTykPortalSecret() error {
 
 func CreateTykPortalSecret(clientset *kubernetes.Clientset, secretName string) error {
 	secretData := map[string][]byte{
-		TykAuth: []byte(data.AppConfig.UserAuth),
-		TykOrg:  []byte(data.AppConfig.OrgId),
+		TykAuth: []byte(data.BootstrapConf.Tyk.UserAuth),
+		TykOrg:  []byte(data.BootstrapConf.Tyk.OrgId),
 	}
 
 	objectMeta := v1.ObjectMeta{Name: secretName}
@@ -120,7 +120,7 @@ func CreateTykPortalSecret(clientset *kubernetes.Clientset, secretName string) e
 		ObjectMeta: objectMeta,
 		Data:       secretData,
 	}
-	_, err := clientset.CoreV1().Secrets(data.AppConfig.TykPodNamespace).
+	_, err := clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
 		Create(context.TODO(), &secret, v1.CreateOptions{})
 	if err != nil {
 		return err

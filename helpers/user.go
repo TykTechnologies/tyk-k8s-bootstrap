@@ -33,7 +33,7 @@ type ResetPasswordStruct struct {
 
 func SetUserPassword(client http.Client, userId string, authCode string, dashboardUrl string) error {
 	newPasswordData := ResetPasswordStruct{
-		NewPassword:     data.AppConfig.TykAdminPassword,
+		NewPassword:     data.BootstrapConf.Tyk.Admin.Password,
 		UserPermissions: map[string]string{"IsAdmin": "admin"},
 	}
 	reqBody, err := json.Marshal(newPasswordData)
@@ -58,19 +58,19 @@ func SetUserPassword(client http.Client, userId string, authCode string, dashboa
 }
 
 func GenerateDashboardCredentials(client http.Client) error {
-	orgId, err := CreateOrganisation(client, data.AppConfig.DashboardUrl)
+	orgId, err := CreateOrganisation(client, data.BootstrapConf.K8s.DashboardSvcUrl)
 	if err != nil {
 		return err
 	}
 
-	data.AppConfig.OrgId = orgId
+	data.BootstrapConf.Tyk.OrgId = orgId
 
-	userAuth, err := CreateUser(client, data.AppConfig.DashboardUrl, orgId)
+	userAuth, err := CreateUser(client, data.BootstrapConf.K8s.DashboardSvcUrl, orgId)
 	if err != nil {
 		return err
 	}
 
-	data.AppConfig.UserAuth = userAuth
+	data.BootstrapConf.Tyk.UserAuth = userAuth
 
 	return nil
 }
@@ -116,9 +116,9 @@ type NeededUserData struct {
 func GetUserData(client http.Client, dashboardUrl string, orgId string) (NeededUserData, error) {
 	reqBody := CreateUserRequest{
 		OrganisationId:  orgId,
-		FirstName:       data.AppConfig.TykAdminFirstName,
-		LastName:        data.AppConfig.TykAdminLastName,
-		EmailAddress:    data.AppConfig.TykAdminEmailAddress,
+		FirstName:       data.BootstrapConf.Tyk.Admin.FirstName,
+		LastName:        data.BootstrapConf.Tyk.Admin.LastName,
+		EmailAddress:    data.BootstrapConf.Tyk.Admin.EmailAddress,
 		Active:          true,
 		UserPermissions: map[string]string{"IsAdmin": "admin"},
 	}
@@ -132,7 +132,7 @@ func GetUserData(client http.Client, dashboardUrl string, orgId string) (NeededU
 		return NeededUserData{}, err
 	}
 
-	req.Header.Set("admin-auth", data.AppConfig.TykAdminSecret)
+	req.Header.Set("admin-auth", data.BootstrapConf.Tyk.Admin.Secret)
 	req.Header.Set("Content-Type", "application/json")
 	res, err := client.Do(req)
 	if err != nil {

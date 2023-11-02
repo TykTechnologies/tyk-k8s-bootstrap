@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	err := data.InitAppDataPreDelete()
+	err := data.InitBootstrapConf()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

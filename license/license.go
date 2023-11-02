@@ -4,25 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
-	"tyk/tyk/bootstrap/constants"
 )
-
-func GetDashboardLicense() (string, error) {
-	license, ok := os.LookupEnv(constants.TykDashboardLicenseEnvVarName)
-	if !ok {
-		return "", errors.New("license env var is not present")
-	}
-
-	if license == "" {
-		return "", errors.New("empty dashboard license")
-	}
-
-	return license, nil
-}
 
 func ValidateDashboardLicense(license string) (bool, error) {
 	token, _ := jwt.Parse(license, func(token *jwt.Token) (interface{}, error) {

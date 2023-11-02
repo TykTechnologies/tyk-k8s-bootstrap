@@ -54,19 +54,23 @@ type CnameRequest struct {
 func SetPortalCname(client http.Client) error {
 	fmt.Println("Setting portal cname")
 
-	cnameReq := CnameRequest{Cname: data.AppConfig.Cname}
+	cnameReq := CnameRequest{Cname: data.BootstrapConf.Tyk.Org.Cname}
 	reqBody, err := json.Marshal(cnameReq)
 	if err != nil {
 		return err
 	}
 	reqData := bytes.NewReader(reqBody)
 
-	req, err := http.NewRequest("PUT", data.AppConfig.DashboardUrl+ApiPortalCnameEndpoint, reqData)
+	req, err := http.NewRequest(
+		http.MethodPut,
+		data.BootstrapConf.K8s.DashboardSvcUrl+ApiPortalCnameEndpoint,
+		reqData,
+	)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Authorization", data.AppConfig.UserAuth)
+	req.Header.Set("Authorization", data.BootstrapConf.Tyk.UserAuth)
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -84,18 +88,22 @@ func SetPortalCname(client http.Client) error {
 func InitialiseCatalogue(client http.Client) error {
 	fmt.Println("Initialising Catalogue")
 
-	initCatalog := InitCatalogReq{OrgId: data.AppConfig.OrgId}
+	initCatalog := InitCatalogReq{OrgId: data.BootstrapConf.Tyk.OrgId}
 	reqBody, err := json.Marshal(initCatalog)
 	if err != nil {
 		return err
 	}
 	reqData := bytes.NewReader(reqBody)
-	req, err := http.NewRequest("POST", data.AppConfig.DashboardUrl+ApiPortalCatalogueEndpoint, reqData)
+	req, err := http.NewRequest(
+		http.MethodPost,
+		data.BootstrapConf.K8s.DashboardSvcUrl+ApiPortalCatalogueEndpoint,
+		reqData,
+	)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Authorization", data.AppConfig.UserAuth)
+	req.Header.Set("Authorization", data.BootstrapConf.Tyk.UserAuth)
 
 	res, err := client.Do(req)
 	if err != nil || res.StatusCode != http.StatusOK {
@@ -114,8 +122,6 @@ func InitialiseCatalogue(client http.Client) error {
 		return err
 	}
 
-	data.AppConfig.CatalogId = resp.Message
-
 	return nil
 }
 
@@ -128,8 +134,8 @@ func CreatePortalHomepage(client http.Client) error {
 		return err
 	}
 	reqData := bytes.NewReader(reqBody)
-	req, err := http.NewRequest("POST", data.AppConfig.DashboardUrl+ApiPortalPagesEndpoint, reqData)
-	req.Header.Set("Authorization", data.AppConfig.UserAuth)
+	req, err := http.NewRequest(http.MethodPost, data.BootstrapConf.K8s.DashboardSvcUrl+ApiPortalPagesEndpoint, reqData)
+	req.Header.Set("Authorization", data.BootstrapConf.Tyk.UserAuth)
 	if err != nil {
 		return err
 	}
@@ -211,8 +217,15 @@ type PortalFields struct {
 func CreatePortalDefaultSettings(client http.Client) error {
 	fmt.Println("Creating bootstrap default settings")
 
-	req, err := http.NewRequest("POST", data.AppConfig.DashboardUrl+ApiPortalConfigurationEndpoint, nil)
-	req.Header.Set("Authorization", data.AppConfig.UserAuth)
+	// TODO(buraksekili): DashboardSvcUrl can be populated via environment variables. So, the URL
+	// might have trailing slashes. Constructing the URL with raw string concatenating is not a good
+	// approach here. Needs refactoring.
+	req, err := http.NewRequest(
+		http.MethodPut,
+		data.BootstrapConf.K8s.DashboardSvcUrl+ApiPortalConfigurationEndpoint,
+		nil,
+	)
+	req.Header.Set("Authorization", data.BootstrapConf.Tyk.UserAuth)
 
 	if err != nil {
 		return err
@@ -237,14 +250,14 @@ func RestartDashboard() error {
 		return err
 	}
 
-	if data.AppConfig.DashboardDeploymentName == "" {
+	if data.BootstrapConf.K8s.DashboardDeploymentName == "" {
 		ls := metav1.LabelSelector{MatchLabels: map[string]string{
 			constants.TykBootstrapLabel: constants.TykBootstrapDashboardDeployLabel,
 		}}
 
 		deployments, err := clientset.
 			AppsV1().
-			Deployments(data.AppConfig.TykPodNamespace).
+			Deployments(data.BootstrapConf.K8s.ReleaseNamespace).
 			List(
 				context.TODO(),
 				metav1.ListOptions{
@@ -256,7 +269,7 @@ func RestartDashboard() error {
 		}
 
 		for _, deployment := range deployments.Items {
-			data.AppConfig.DashboardDeploymentName = deployment.ObjectMeta.Name
+			data.BootstrapConf.K8s.DashboardDeploymentName = deployment.ObjectMeta.Name
 		}
 	}
 
@@ -265,10 +278,10 @@ func RestartDashboard() error {
 
 	_, err = clientset.
 		AppsV1().
-		Deployments(data.AppConfig.TykPodNamespace).
+		Deployments(data.BootstrapConf.K8s.ReleaseNamespace).
 		Patch(
 			context.TODO(),
-			data.AppConfig.DashboardDeploymentName,
+			data.BootstrapConf.K8s.DashboardDeploymentName,
 			types.StrategicMergePatchType,
 			[]byte(timeStamp),
 			metav1.PatchOptions{},

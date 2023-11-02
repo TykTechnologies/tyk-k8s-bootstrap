@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	err := data.InitAppDataPostInstall()
+	err := data.InitPostInstall()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -24,7 +24,7 @@ func main() {
 	}
 
 	tp := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: data.AppConfig.DashboardInsecureSkipVerify},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: data.BootstrapConf.InsecureSkipVerify},
 	}
 	client := http.Client{Transport: tp}
 
@@ -45,7 +45,7 @@ func main() {
 	fmt.Println("Finished generating dashboard credentials")
 
 	fmt.Println("Started bootstrapping operator secret")
-	if data.AppConfig.OperatorSecretEnabled {
+	if data.BootstrapConf.OperatorKubernetesSecretName != "" {
 		err = helpers.BootstrapTykOperatorSecret()
 		if err != nil {
 			fmt.Println(err)
@@ -55,7 +55,7 @@ func main() {
 	fmt.Println("Finished bootstrapping operator secret")
 
 	fmt.Println("Started bootstrapping portal secret")
-	if data.AppConfig.DeveloperPortalSecretEnabled {
+	if data.BootstrapConf.DevPortalKubernetesSecretName != "" {
 		err = helpers.BootstrapTykPortalSecret()
 		if err != nil {
 			fmt.Println(err)
@@ -64,7 +64,7 @@ func main() {
 	}
 
 	fmt.Println("Started bootstrapping portal with requests to dashboard")
-	if data.AppConfig.BootstrapPortal {
+	if data.BootstrapConf.BootstrapPortal {
 		err = helpers.BoostrapPortal(client)
 		if err != nil {
 			fmt.Println(err)

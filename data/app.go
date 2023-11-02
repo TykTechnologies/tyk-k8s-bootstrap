@@ -3,147 +3,125 @@ package data
 import (
 	"context"
 	"fmt"
+	"github.com/kelseyhightower/envconfig"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"os"
-	"strconv"
 	"tyk/tyk/bootstrap/constants"
 )
 
-type AppArguments struct {
-	DashboardHost                string
-	DashboardPort                int32
-	DashBoardLicense             string
-	TykAdminSecret               string
-	CurrentOrgName               string
-	TykAdminPassword             string
-	Cname                        string
-	TykAdminFirstName            string
-	TykAdminLastName             string
-	TykAdminEmailAddress         string
-	UserAuth                     string
-	OrgId                        string
-	CatalogId                    string
-	DashboardUrl                 string
-	DashboardProto               string
-	TykPodNamespace              string
-	DashboardSvc                 string
-	DashboardInsecureSkipVerify  bool
-	IsDashboardEnabled           bool
-	OperatorSecretEnabled        bool
-	OperatorSecretName           string
-	DeveloperPortalSecretEnabled bool
-	DeveloperPortalSecretName    string
-	BootstrapPortal              bool
-	DashboardDeploymentName      string
+const prefix = "TYK_K8SBOOTSTRAP"
+
+type Config struct {
+	// InsecureSkipVerify enables InsecureSkipVerify options in http request sent to Tyk - might be useful
+	// for Tyk Dashboard with self-signed certs.
+	InsecureSkipVerify bool
+	// BootstrapDashboard controls bootstrapping Tyk Dashboard or not.
+	BootstrapDashboard bool
+	// BootstrapPortal controls bootstrapping Tyk Classic Portal or not.
+	BootstrapPortal bool
+
+	// OperatorKubernetesSecretName corresponds to the Kubernetes secret name that will be created for Tyk Operator.
+	// Set it to an empty to string to disable bootstrapping Kubernetes secret for Tyk Operator.
+	// By default, tyk-operator-conf
+	OperatorKubernetesSecretName string
+	// DevPortalKubernetesSecretName corresponds to the Kubernetes secret name that will be created for
+	// Tyk Developer Enterprise Portal. Set it to an empty to string to disable bootstrapping Kubernetes
+	// secret for Tyk Developer Enterprise Portal.
+	// By default, tyk-dev-portal-conf
+	DevPortalKubernetesSecretName string
+	// K8s consists of configurations for Kubernetes services of Tyk.
+	K8s K8sConf
+	// Tyk consists of configurations for Tyk components such as Tyk Dashboard Admin information
+	// or Tyk Portal configurations.
+	Tyk TykConf
 }
 
-var AppConfig = AppArguments{
-	DashboardPort:        3000,
-	TykAdminSecret:       "12345",
-	CurrentOrgName:       "TYKTYK",
-	Cname:                "tykCName",
-	TykAdminPassword:     "123456",
-	TykAdminFirstName:    "firstName",
-	TykAdminEmailAddress: "tyk@tyk.io",
-	TykAdminLastName:     "lastName",
+type K8sConf struct {
+	// DashboardSvcUrl corresponds to the URL of Tyk Dashboard.
+	DashboardSvcUrl string
+	// DashboardSvcProto corresponds to Tyk Dashboard Service Protocol (either http or https).
+	// By default, it is http.
+	DashboardSvcProto string
+	// ReleaseNamespace corresponds to the namespace where Tyk is deployed via Helm Chart.
+	ReleaseNamespace string
+	// DashboardDeploymentName corresponds to the name of the Tyk Dashboard Deployment, which is being used
+	// to restart Dashboard pod after bootstrapping. By default, it discovers Dashboard Deployment name.
+	// If the environment variable is populated, the discovery will not be triggered.
+	DashboardDeploymentName string
 }
 
-func InitAppDataPreDelete() error {
-	AppConfig.OperatorSecretName = os.Getenv(constants.OperatorSecretNameEnvVar)
-	AppConfig.DeveloperPortalSecretName = os.Getenv(constants.DeveloperPortalSecretNameEnvVar)
-	AppConfig.TykPodNamespace = os.Getenv(constants.TykPodNamespaceEnvVar)
-	return nil
+type TykAdmin struct {
+	// Secret corresponds to the secret that will be used in Admin APIs.
+	Secret string
+	// FirstName corresponds to the first name of the admin being created.
+	FirstName string
+	// LastName corresponds to the last name of the admin being created.
+	LastName string
+	// EmailAddress corresponds to the email address of the admin being created.
+	EmailAddress string
+	// Password corresponds to the password of the admin being created.
+	Password string
 }
 
-func InitAppDataPostInstall() error {
-	AppConfig.TykAdminFirstName = os.Getenv(constants.TykAdminFirstNameEnvVar)
-	AppConfig.TykAdminLastName = os.Getenv(constants.TykAdminLastNameEnvVar)
-	AppConfig.TykAdminEmailAddress = os.Getenv(constants.TykAdminEmailEnvVar)
-	AppConfig.TykAdminPassword = os.Getenv(constants.TykAdminPasswordEnvVar)
-	AppConfig.TykPodNamespace = os.Getenv(constants.TykPodNamespaceEnvVar)
-	AppConfig.DashboardProto = os.Getenv(constants.TykDashboardProtoEnvVar)
+type TykOrg struct {
+	// Name corresponds to the name for your organization that is going to be bootstrapped in Tyk
+	Name string
+	// Cname corresponds to the Organisation CNAME which is going to bind the Portal to.
+	Cname string
+}
 
-	AppConfig.DashBoardLicense = os.Getenv(constants.TykDbLicensekeyEnvVar)
-	AppConfig.TykAdminSecret = os.Getenv(constants.TykAdminSecretEnvVar)
-	AppConfig.CurrentOrgName = os.Getenv(constants.TykOrgNameEnvVar)
-	AppConfig.Cname = os.Getenv(constants.TykOrgCnameEnvVar)
+type TykConf struct {
+	// Admin consists of configurations for Tyk Dashboard Admin.
+	Admin TykAdmin
+	// Org consists of configurations for the organisation that is going to be created in Tyk Dashboard.
+	Org TykOrg
 
-	var err error
+	DashboardLicense string
 
-	dashEnabledRaw := os.Getenv(constants.DashboardEnabledEnvVar)
-	if dashEnabledRaw != "" {
-		AppConfig.IsDashboardEnabled, err = strconv.ParseBool(os.Getenv(constants.DashboardEnabledEnvVar))
-		if err != nil {
-			return fmt.Errorf("failed to parse %v, err: %v", constants.DashboardEnabledEnvVar, err)
-		}
+	// UserAuth corresponds to AuthCode of the created user, and it will be used in Authorization header
+	// of the HTTP requests that will be sent to Tyk for bootstrapping. Also, if bootstrapping Operator Secret
+	// is enabled via TODO: add here, UserAuth corresponds to TykAuth field in the Kubernetes secret for Tyk Operator.
+	UserAuth string `ignored:"true"`
+	OrgId    string `ignored:"true"`
+}
+
+var BootstrapConf = Config{}
+
+func InitBootstrapConf() error {
+	return envconfig.Process(prefix, &BootstrapConf)
+}
+
+func InitPostInstall() error {
+	err := InitBootstrapConf()
+	if err != nil {
+		return err
 	}
 
-	if AppConfig.IsDashboardEnabled {
-		if err := discoverDashboardSvc(); err != nil {
-			return err
-		}
-		AppConfig.DashboardUrl = fmt.Sprintf("%s://%s.%s.svc.cluster.local:%d",
-			AppConfig.DashboardProto,
-			AppConfig.DashboardSvc,
-			AppConfig.TykPodNamespace,
-			AppConfig.DashboardPort,
-		)
-	}
-
-	operatorSecretEnabledRaw := os.Getenv(constants.OperatorSecretEnabledEnvVar)
-	if operatorSecretEnabledRaw != "" {
-		AppConfig.OperatorSecretEnabled, err = strconv.ParseBool(operatorSecretEnabledRaw)
-		if err != nil {
-			return fmt.Errorf("failed to parse %v, err: %v", constants.OperatorSecretEnabledEnvVar, err)
-		}
-	}
-
-	AppConfig.OperatorSecretName = os.Getenv(constants.OperatorSecretNameEnvVar)
-
-	developerPortalSecretEnabledRaw := os.Getenv(constants.DeveloperPortalSecretEnabledEnvVar)
-	if developerPortalSecretEnabledRaw != "" {
-		AppConfig.DeveloperPortalSecretEnabled, err = strconv.ParseBool(developerPortalSecretEnabledRaw)
+	if BootstrapConf.BootstrapDashboard {
+		dashURL, err := discoverDashboardSvc()
 		if err != nil {
 			return err
 		}
-	}
-	AppConfig.DeveloperPortalSecretName = os.Getenv(constants.DeveloperPortalSecretNameEnvVar)
 
-	bootstrapPortalBoolRaw := os.Getenv(constants.BootstrapPortalEnvVar)
-	if bootstrapPortalBoolRaw != "" {
-		AppConfig.BootstrapPortal, err = strconv.ParseBool(bootstrapPortalBoolRaw)
-		if err != nil {
-			return fmt.Errorf("failed to parse %v, err: %v", constants.BootstrapPortalEnvVar, err)
-		}
-	}
-	AppConfig.DashboardDeploymentName = os.Getenv(constants.TykDashboardDeployEnvVar)
-
-	dashboardInsecureSkipVerifyRaw := os.Getenv(constants.TykDashboardInsecureSkipVerify)
-	if dashboardInsecureSkipVerifyRaw != "" {
-		AppConfig.DashboardInsecureSkipVerify, err = strconv.ParseBool(dashboardInsecureSkipVerifyRaw)
-		if err != nil {
-			return fmt.Errorf("failed to parse %v, err: %v", constants.TykDashboardInsecureSkipVerify, err)
-		}
+		BootstrapConf.K8s.DashboardSvcUrl = dashURL
 	}
 
 	return nil
 }
 
 // discoverDashboardSvc lists Service objects with constants.TykBootstrapReleaseLabel label that has
-// constants.TykBootstrapDashboardSvcLabel value and gets this Service's metadata name, and port and
-// updates DashboardSvc and DashboardPort fields.
-func discoverDashboardSvc() error {
+// constants.TykBootstrapDashboardSvcLabel value and returns a service URL for Tyk Dashboard.
+func discoverDashboardSvc() (string, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	c, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	ls := metav1.LabelSelector{MatchLabels: map[string]string{
@@ -154,14 +132,14 @@ func discoverDashboardSvc() error {
 
 	services, err := c.
 		CoreV1().
-		Services(AppConfig.TykPodNamespace).
+		Services(BootstrapConf.K8s.ReleaseNamespace).
 		List(context.TODO(), metav1.ListOptions{LabelSelector: l})
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if len(services.Items) == 0 {
-		return fmt.Errorf("failed to find services with label %v\n", l)
+		return "", fmt.Errorf("failed to find services with label %v\n", l)
 	}
 
 	if len(services.Items) > 1 {
@@ -170,14 +148,16 @@ func discoverDashboardSvc() error {
 
 	service := services.Items[0]
 	if len(service.Spec.Ports) == 0 {
-		return fmt.Errorf("svc/%v/%v has no open ports\n", service.Name, service.Namespace)
+		return "", fmt.Errorf("svc/%v/%v has no open ports\n", service.Name, service.Namespace)
 	}
 	if len(service.Spec.Ports) > 1 {
 		fmt.Printf("[WARNING] Found multiple open ports in svc/%v/%v\n", service.Name, service.Namespace)
 	}
 
-	AppConfig.DashboardPort = service.Spec.Ports[0].Port
-	AppConfig.DashboardSvc = service.Name
-
-	return nil
+	return fmt.Sprintf("%s://%s.%s.svc.cluster.local:%d",
+		BootstrapConf.K8s.DashboardSvcProto,
+		service.Name,
+		BootstrapConf.K8s.ReleaseNamespace,
+		service.Spec.Ports[0].Port,
+	), nil
 }

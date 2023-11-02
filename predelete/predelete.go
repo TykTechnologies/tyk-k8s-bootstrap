@@ -71,7 +71,7 @@ func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
 
 func PreDeletePortalSecret(clientset *kubernetes.Clientset) error {
 	fmt.Println("Running pre delete hook")
-	ns := data.AppConfig.TykPodNamespace
+	ns := data.BootstrapConf.K8s.ReleaseNamespace
 
 	secrets, err := clientset.CoreV1().Secrets(ns).
 		List(context.TODO(), metav1.ListOptions{})
@@ -81,7 +81,7 @@ func PreDeletePortalSecret(clientset *kubernetes.Clientset) error {
 
 	notFound := true
 	for _, value := range secrets.Items {
-		if data.AppConfig.DeveloperPortalSecretName == value.Name {
+		if data.BootstrapConf.DevPortalKubernetesSecretName == value.Name {
 			err = clientset.CoreV1().Secrets(ns).
 				Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
 
@@ -106,7 +106,7 @@ func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
 	// Usually, the raw strings in label selectors are not recommended.
 	jobs, err := clientset.
 		BatchV1().
-		Jobs(data.AppConfig.TykPodNamespace).
+		Jobs(data.BootstrapConf.K8s.ReleaseNamespace).
 		List(
 			context.TODO(),
 			metav1.ListOptions{
@@ -126,7 +126,7 @@ func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
 
 			err2 := clientset.
 				BatchV1().
-				Jobs(data.AppConfig.TykPodNamespace).
+				Jobs(data.BootstrapConf.K8s.ReleaseNamespace).
 				Delete(context.TODO(), job.Name, metav1.DeleteOptions{PropagationPolicy: &deletePropagationType})
 			if err2 != nil {
 				errCascading = err2
