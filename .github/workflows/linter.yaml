@@ -3,13 +3,13 @@ name: golangci-lint
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - '**.go'
 
   pull_request:
     branches:
-      - master
+      - main
     paths:
       - '**.go'
 
