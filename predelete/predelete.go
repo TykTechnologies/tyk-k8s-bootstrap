@@ -3,7 +3,6 @@ package predelete
 import (
 	"context"
 	"fmt"
-	"tyk/tyk/bootstrap/constants"
 	"tyk/tyk/bootstrap/data"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -126,7 +125,7 @@ func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
 		List(
 			context.TODO(),
 			metav1.ListOptions{
-				LabelSelector: constants.TykBootstrapLabel,
+				LabelSelector: data.TykBootstrapLabel,
 			},
 		)
 	if err != nil {
@@ -139,8 +138,8 @@ func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
 		job := jobs.Items[i]
 
 		// Do not need to delete pre-delete job. It will be deleted by Helm.
-		jobLabel := job.ObjectMeta.Labels[constants.TykBootstrapLabel]
-		if jobLabel != constants.TykBootstrapPreDeleteLabel {
+		jobLabel := job.ObjectMeta.Labels[data.TykBootstrapLabel]
+		if jobLabel != data.TykBootstrapPreDeleteLabel {
 			deletePropagationType := metav1.DeletePropagationBackground
 
 			err2 := clientset.

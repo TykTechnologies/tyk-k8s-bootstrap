@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"time"
-	"tyk/tyk/bootstrap/constants"
 	"tyk/tyk/bootstrap/data"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -70,7 +69,7 @@ func SetPortalCname(client http.Client) error {
 		return err
 	}
 
-	req.Header.Set("Authorization", data.BootstrapConf.Tyk.UserAuth)
+	req.Header.Set(data.AuthorizationHeader, data.BootstrapConf.Tyk.UserAuth)
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -104,7 +103,7 @@ func InitialiseCatalogue(client http.Client) error {
 		return err
 	}
 
-	req.Header.Set("Authorization", data.BootstrapConf.Tyk.UserAuth)
+	req.Header.Set(data.AuthorizationHeader, data.BootstrapConf.Tyk.UserAuth)
 
 	res, err := client.Do(req)
 	if err != nil || res.StatusCode != http.StatusOK {
@@ -143,7 +142,7 @@ func CreatePortalHomepage(client http.Client) error {
 		return err
 	}
 
-	req.Header.Set("Authorization", data.BootstrapConf.Tyk.UserAuth)
+	req.Header.Set(data.AuthorizationHeader, data.BootstrapConf.Tyk.UserAuth)
 
 	res, err := client.Do(req)
 	if err != nil || res.StatusCode != http.StatusOK {
@@ -232,7 +231,7 @@ func CreatePortalDefaultSettings(client http.Client) error {
 		data.BootstrapConf.K8s.DashboardSvcUrl+ApiPortalConfigurationEndpoint,
 		nil,
 	)
-	req.Header.Set("Authorization", data.BootstrapConf.Tyk.UserAuth)
+	req.Header.Set(data.AuthorizationHeader, data.BootstrapConf.Tyk.UserAuth)
 
 	if err != nil {
 		return err
@@ -259,7 +258,7 @@ func RestartDashboard() error {
 
 	if data.BootstrapConf.K8s.DashboardDeploymentName == "" {
 		ls := metav1.LabelSelector{MatchLabels: map[string]string{
-			constants.TykBootstrapLabel: constants.TykBootstrapDashboardDeployLabel,
+			data.TykBootstrapLabel: data.TykBootstrapDashboardDeployLabel,
 		}}
 
 		deployments, err := clientset.

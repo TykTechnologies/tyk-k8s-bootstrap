@@ -43,15 +43,15 @@ func SetUserPassword(client http.Client, userId, authCode, dashboardUrl string) 
 	}
 
 	req, err := http.NewRequest(
-		"POST",
+		http.MethodPost,
 		fmt.Sprintf(ApiUsersActionsResetEndpoint, dashboardUrl, userId),
 		bytes.NewReader(reqBody))
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("authorization", authCode)
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(data.AuthorizationHeader, authCode)
+	req.Header.Set(data.ContentTypeHeader, "application/json")
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -135,13 +135,13 @@ func GetUserData(client http.Client, dashboardUrl, orgId string) (NeededUserData
 		return NeededUserData{}, err
 	}
 
-	req, err := http.NewRequest("POST", dashboardUrl+"/admin/users", bytes.NewReader(reqBytes))
+	req, err := http.NewRequest(http.MethodPost, dashboardUrl+"/admin/users", bytes.NewReader(reqBytes))
 	if err != nil {
 		return NeededUserData{}, err
 	}
 
-	req.Header.Set("admin-auth", data.BootstrapConf.Tyk.Admin.Secret)
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(data.AdminAuthHeader, data.BootstrapConf.Tyk.Admin.Secret)
+	req.Header.Set(data.ContentTypeHeader, "application/json")
 
 	res, err := client.Do(req)
 	if err != nil {

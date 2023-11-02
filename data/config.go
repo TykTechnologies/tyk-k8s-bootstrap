@@ -3,8 +3,6 @@ package data
 import (
 	"context"
 	"fmt"
-	"tyk/tyk/bootstrap/constants"
-
 	"github.com/kelseyhightower/envconfig"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -126,7 +124,7 @@ func discoverDashboardSvc() (string, error) {
 	}
 
 	ls := metav1.LabelSelector{MatchLabels: map[string]string{
-		constants.TykBootstrapLabel: constants.TykBootstrapDashboardSvcLabel,
+		TykBootstrapLabel: TykBootstrapDashboardSvcLabel,
 	}}
 
 	l := labels.Set(ls.MatchLabels).String()

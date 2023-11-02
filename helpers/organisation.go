@@ -31,13 +31,13 @@ func CheckForExistingOrganisation(client http.Client) error {
 
 	orgsApiEndpoint := data.BootstrapConf.K8s.DashboardSvcUrl + AdminOrganisationsEndpoint
 
-	req, err := http.NewRequest("GET", orgsApiEndpoint, nil)
+	req, err := http.NewRequest(http.MethodGet, orgsApiEndpoint, nil)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("admin-auth", data.BootstrapConf.Tyk.Admin.Secret)
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(data.AdminAuthHeader, data.BootstrapConf.Tyk.Admin.Secret)
+	req.Header.Set(data.ContentTypeHeader, "application/json")
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -91,13 +91,13 @@ func CreateOrganisation(client http.Client, dashBoardUrl string) (string, error)
 		return "", err
 	}
 
-	req, err := http.NewRequest("POST", dashBoardUrl+AdminOrganisationsEndpoint, bytes.NewReader(reqBodyBytes))
+	req, err := http.NewRequest(http.MethodPost, dashBoardUrl+AdminOrganisationsEndpoint, bytes.NewReader(reqBodyBytes))
 	if err != nil {
 		return "", err
 	}
 
-	req.Header.Set("admin-auth", data.BootstrapConf.Tyk.Admin.Secret)
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(data.AdminAuthHeader, data.BootstrapConf.Tyk.Admin.Secret)
+	req.Header.Set(data.ContentTypeHeader, "application/json")
 
 	res, err := client.Do(req)
 	if err != nil {
