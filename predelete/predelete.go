@@ -3,7 +3,6 @@ package predelete
 import (
 	"context"
 	"fmt"
-	"os"
 	"tyk/tyk/bootstrap/constants"
 	"tyk/tyk/bootstrap/data"
 
@@ -44,15 +43,22 @@ func ExecutePreDeleteOperations() error {
 
 func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
 	fmt.Println("Running pre delete hook")
-	secrets, err := clientset.CoreV1().Secrets(os.Getenv("TYK_POD_NAMESPACE")).List(context.TODO(), metav1.ListOptions{})
+	secrets, err := clientset.
+		CoreV1().
+		Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
+		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
 
 	found := false
 	for _, value := range secrets.Items {
-		if value.Name == os.Getenv("OPERATOR_SECRET_NAME") {
-			err = clientset.CoreV1().Secrets(os.Getenv("TYK_POD_NAMESPACE")).Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
+		if value.Name == data.BootstrapConf.OperatorKubernetesSecretName {
+			err = clientset.
+				CoreV1().
+				Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
+				Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
+
 			if err != nil {
 				return err
 			}
@@ -110,7 +116,7 @@ func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
 		List(
 			context.TODO(),
 			metav1.ListOptions{
-				LabelSelector: fmt.Sprintf("%s", constants.TykBootstrapLabel),
+				LabelSelector: constants.TykBootstrapLabel,
 			},
 		)
 	if err != nil {
