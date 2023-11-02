@@ -29,22 +29,25 @@ func main() {
 	client := http.Client{Transport: tp}
 
 	fmt.Println("Started creating dashboard org")
+
 	err = helpers.CheckForExistingOrganisation(client)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println("Finished creating dashboard org")
 
+	fmt.Println("Finished creating dashboard org")
 	fmt.Println("Generating dashboard credentials")
+
 	err = helpers.GenerateDashboardCredentials(client)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println("Finished generating dashboard credentials")
 
+	fmt.Println("Finished generating dashboard credentials")
 	fmt.Println("Started bootstrapping operator secret")
+
 	if data.BootstrapConf.OperatorKubernetesSecretName != "" {
 		err = helpers.BootstrapTykOperatorSecret()
 		if err != nil {
@@ -52,9 +55,9 @@ func main() {
 			os.Exit(1)
 		}
 	}
-	fmt.Println("Finished bootstrapping operator secret")
 
-	fmt.Println("Started bootstrapping portal secret")
+	fmt.Println("Finished bootstrapping operator secret\nStarted bootstrapping portal secret")
+
 	if data.BootstrapConf.DevPortalKubernetesSecretName != "" {
 		err = helpers.BootstrapTykPortalSecret()
 		if err != nil {
@@ -64,6 +67,7 @@ func main() {
 	}
 
 	fmt.Println("Started bootstrapping portal with requests to dashboard")
+
 	if data.BootstrapConf.BootstrapPortal {
 		err = helpers.BoostrapPortal(client)
 		if err != nil {
@@ -71,6 +75,6 @@ func main() {
 			os.Exit(1)
 		}
 	}
-	fmt.Println("Finished bootstrapping portal")
 
+	fmt.Println("Finished bootstrapping portal")
 }

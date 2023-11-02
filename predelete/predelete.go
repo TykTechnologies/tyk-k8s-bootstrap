@@ -43,6 +43,7 @@ func ExecutePreDeleteOperations() error {
 
 func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
 	fmt.Println("Running pre delete hook")
+
 	secrets, err := clientset.
 		CoreV1().
 		Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
@@ -52,7 +53,9 @@ func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
 	}
 
 	found := false
-	for _, value := range secrets.Items {
+
+	for i := range secrets.Items {
+		value := secrets.Items[i]
 		if value.Name == data.BootstrapConf.OperatorKubernetesSecretName {
 			err = clientset.
 				CoreV1().
@@ -62,7 +65,9 @@ func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
 			if err != nil {
 				return err
 			}
+
 			found = true
+
 			break
 		}
 	}
@@ -72,30 +77,35 @@ func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
 	} else {
 		fmt.Println("A previously created operator secret was identified and deleted")
 	}
+
 	return nil
 }
 
 func PreDeletePortalSecret(clientset *kubernetes.Clientset) error {
 	fmt.Println("Running pre delete hook")
-	ns := data.BootstrapConf.K8s.ReleaseNamespace
 
-	secrets, err := clientset.CoreV1().Secrets(ns).
+	secrets, err := clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
 		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
 
 	notFound := true
-	for _, value := range secrets.Items {
+
+	for i := range secrets.Items {
+		value := secrets.Items[i]
 		if data.BootstrapConf.DevPortalKubernetesSecretName == value.Name {
-			err = clientset.CoreV1().Secrets(ns).
+			err = clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
 				Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
 
 			if err != nil {
 				return err
 			}
+
 			fmt.Println("A previously created developer portal secret was identified and deleted")
+
 			notFound = false
+
 			break
 		}
 	}
@@ -124,7 +134,10 @@ func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
 	}
 
 	var errCascading error
-	for _, job := range jobs.Items {
+
+	for i := range jobs.Items {
+		job := jobs.Items[i]
+
 		// Do not need to delete pre-delete job. It will be deleted by Helm.
 		jobLabel := job.ObjectMeta.Labels[constants.TykBootstrapLabel]
 		if jobLabel != constants.TykBootstrapPreDeleteLabel {

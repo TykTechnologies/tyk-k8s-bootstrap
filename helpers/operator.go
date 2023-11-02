@@ -3,11 +3,12 @@ package helpers
 import (
 	"context"
 	"fmt"
-	v12 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"tyk/tyk/bootstrap/data"
+
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"tyk/tyk/bootstrap/data"
 )
 
 func BootstrapTykOperatorSecret() error {
@@ -21,20 +22,28 @@ func BootstrapTykOperatorSecret() error {
 		return err
 	}
 
-	secrets, err := clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
-		List(context.TODO(), v1.ListOptions{})
+	secrets, err := clientset.
+		CoreV1().
+		Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
+		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
 
-	for _, value := range secrets.Items {
-		if value.Name == data.BootstrapConf.OperatorKubernetesSecretName {
-			err = clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
-				Delete(context.TODO(), value.Name, v1.DeleteOptions{})
+	for i := range secrets.Items {
+		secret := secrets.Items[i]
+		if secret.Name == data.BootstrapConf.OperatorKubernetesSecretName {
+			err = clientset.
+				CoreV1().
+				Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
+				Delete(context.TODO(), secret.Name, metav1.DeleteOptions{})
+
 			if err != nil {
 				return err
 			}
+
 			fmt.Println("A previously created operator secret was identified and deleted")
+
 			break
 		}
 	}
@@ -55,14 +64,17 @@ func CreateTykOperatorSecret(clientset *kubernetes.Clientset) error {
 		TykUrl:  []byte(data.BootstrapConf.K8s.DashboardSvcUrl),
 	}
 
-	objectMeta := v1.ObjectMeta{Name: data.BootstrapConf.OperatorKubernetesSecretName}
+	objectMeta := metav1.ObjectMeta{Name: data.BootstrapConf.OperatorKubernetesSecretName}
 
-	secret := v12.Secret{
+	secret := v1.Secret{
 		ObjectMeta: objectMeta,
 		Data:       secretData,
 	}
-	_, err := clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
-		Create(context.TODO(), &secret, v1.CreateOptions{})
+
+	_, err := clientset.
+		CoreV1().
+		Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
+		Create(context.TODO(), &secret, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -82,19 +94,23 @@ func BootstrapTykPortalSecret() error {
 	}
 
 	secrets, err := clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
-		List(context.TODO(), v1.ListOptions{})
+		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
 
-	for _, value := range secrets.Items {
-		if data.BootstrapConf.DevPortalKubernetesSecretName == value.Name {
+	for i := range secrets.Items {
+		secret := secrets.Items[i]
+
+		if data.BootstrapConf.DevPortalKubernetesSecretName == secret.Name {
 			err = clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
-				Delete(context.TODO(), value.Name, v1.DeleteOptions{})
+				Delete(context.TODO(), secret.Name, metav1.DeleteOptions{})
 			if err != nil {
 				return err
 			}
+
 			fmt.Println("A previously created portal secret was identified and deleted")
+
 			break
 		}
 	}
@@ -105,6 +121,7 @@ func BootstrapTykPortalSecret() error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -114,14 +131,17 @@ func CreateTykPortalSecret(clientset *kubernetes.Clientset, secretName string) e
 		TykOrg:  []byte(data.BootstrapConf.Tyk.OrgId),
 	}
 
-	objectMeta := v1.ObjectMeta{Name: secretName}
+	objectMeta := metav1.ObjectMeta{Name: secretName}
 
-	secret := v12.Secret{
+	secret := v1.Secret{
 		ObjectMeta: objectMeta,
 		Data:       secretData,
 	}
-	_, err := clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
-		Create(context.TODO(), &secret, v1.CreateOptions{})
+
+	_, err := clientset.
+		CoreV1().
+		Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
+		Create(context.TODO(), &secret, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}

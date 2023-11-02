@@ -3,12 +3,13 @@ package data
 import (
 	"context"
 	"fmt"
+	"tyk/tyk/bootstrap/constants"
+
 	"github.com/kelseyhightower/envconfig"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"tyk/tyk/bootstrap/constants"
 )
 
 const prefix = "TYK_K8SBOOTSTRAP"
@@ -150,6 +151,7 @@ func discoverDashboardSvc() (string, error) {
 	if len(service.Spec.Ports) == 0 {
 		return "", fmt.Errorf("svc/%v/%v has no open ports\n", service.Name, service.Namespace)
 	}
+
 	if len(service.Spec.Ports) > 1 {
 		fmt.Printf("[WARNING] Found multiple open ports in svc/%v/%v\n", service.Name, service.Namespace)
 	}

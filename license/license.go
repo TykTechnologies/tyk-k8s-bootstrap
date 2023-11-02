@@ -3,23 +3,29 @@ package license
 import (
 	"errors"
 	"fmt"
-	"github.com/golang-jwt/jwt"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/golang-jwt/jwt"
 )
 
 func ValidateDashboardLicense(license string) (bool, error) {
-	token, _ := jwt.Parse(license, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(license, func(token *jwt.Token) (interface{}, error) {
 		return []byte(""), nil
 	})
+	if err != nil {
+		return false, err
+	}
 
 	if strings.ToLower(fmt.Sprint(token.Header["typ"])) == "jwt" {
 		exp := strings.Split(fmt.Sprintf("%f", token.Claims.(jwt.MapClaims)["exp"]), ".")[0]
+
 		expDate, err := strconv.ParseInt(exp, 10, 64)
 		if err != nil {
 			return false, errors.New("impossible to parse expiration date")
 		}
+
 		if time.Unix(expDate, 0).Before(time.Now()) {
 			return false, errors.New("expired dashboard license")
 		}
