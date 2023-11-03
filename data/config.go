@@ -87,6 +87,7 @@ type TykConf struct {
 	// Org consists of configurations for the organisation that is going to be created in Tyk Dashboard.
 	Org TykOrg
 
+	// DashboardLicense corresponds to the license key of Tyk Dashboard.
 	DashboardLicense string
 }
 
