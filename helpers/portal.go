@@ -69,7 +69,7 @@ func SetPortalCname(client http.Client) error {
 		return err
 	}
 
-	req.Header.Set(data.AuthorizationHeader, data.BootstrapConf.Tyk.UserAuth)
+	req.Header.Set(data.AuthorizationHeader, data.BootstrapConf.Tyk.Admin.Auth)
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -87,7 +87,7 @@ func SetPortalCname(client http.Client) error {
 func InitialiseCatalogue(client http.Client) error {
 	fmt.Println("Initialising Catalogue")
 
-	initCatalog := InitCatalogReq{OrgId: data.BootstrapConf.Tyk.OrgId}
+	initCatalog := InitCatalogReq{OrgId: data.BootstrapConf.Tyk.Org.ID}
 
 	reqBody, err := json.Marshal(initCatalog)
 	if err != nil {
@@ -103,7 +103,7 @@ func InitialiseCatalogue(client http.Client) error {
 		return err
 	}
 
-	req.Header.Set(data.AuthorizationHeader, data.BootstrapConf.Tyk.UserAuth)
+	req.Header.Set(data.AuthorizationHeader, data.BootstrapConf.Tyk.Admin.Auth)
 
 	res, err := client.Do(req)
 	if err != nil || res.StatusCode != http.StatusOK {
@@ -142,7 +142,7 @@ func CreatePortalHomepage(client http.Client) error {
 		return err
 	}
 
-	req.Header.Set(data.AuthorizationHeader, data.BootstrapConf.Tyk.UserAuth)
+	req.Header.Set(data.AuthorizationHeader, data.BootstrapConf.Tyk.Admin.Auth)
 
 	res, err := client.Do(req)
 	if err != nil || res.StatusCode != http.StatusOK {
@@ -231,7 +231,7 @@ func CreatePortalDefaultSettings(client http.Client) error {
 		data.BootstrapConf.K8s.DashboardSvcUrl+ApiPortalConfigurationEndpoint,
 		nil,
 	)
-	req.Header.Set(data.AuthorizationHeader, data.BootstrapConf.Tyk.UserAuth)
+	req.Header.Set(data.AuthorizationHeader, data.BootstrapConf.Tyk.Admin.Auth)
 
 	if err != nil {
 		return err

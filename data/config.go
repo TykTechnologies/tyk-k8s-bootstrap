@@ -63,6 +63,12 @@ type TykAdmin struct {
 	EmailAddress string
 	// Password corresponds to the password of the admin being created.
 	Password string
+
+	// Auth corresponds to Tyk Dashboard API Access Credentials of the admin user, and it will be used
+	// in Authorization header of the HTTP requests that will be sent to Tyk for bootstrapping.
+	// Also, if bootstrapping Tyk Operator Secret is enabled Auth corresponds to TykAuth field in the
+	// Kubernetes secret of Tyk Operator.
+	Auth string `ignored:"true"`
 }
 
 type TykOrg struct {
@@ -70,6 +76,9 @@ type TykOrg struct {
 	Name string
 	// Cname corresponds to the Organisation CNAME which is going to bind the Portal to.
 	Cname string
+
+	// ID corresponds to the organisation ID that is being created.
+	ID string `ignored:"true"`
 }
 
 type TykConf struct {
@@ -79,12 +88,6 @@ type TykConf struct {
 	Org TykOrg
 
 	DashboardLicense string
-
-	// UserAuth corresponds to AuthCode of the created user, and it will be used in Authorization header
-	// of the HTTP requests that will be sent to Tyk for bootstrapping. Also, if bootstrapping Operator Secret
-	// is enabled via TODO: add here, UserAuth corresponds to TykAuth field in the Kubernetes secret for Tyk Operator.
-	UserAuth string `ignored:"true"`
-	OrgId    string `ignored:"true"`
 }
 
 var BootstrapConf = Config{}

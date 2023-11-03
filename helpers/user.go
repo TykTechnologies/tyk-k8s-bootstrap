@@ -71,14 +71,14 @@ func GenerateDashboardCredentials(client http.Client) error {
 		return err
 	}
 
-	data.BootstrapConf.Tyk.OrgId = orgId
+	data.BootstrapConf.Tyk.Org.ID = orgId
 
 	userAuth, err := CreateUser(client, data.BootstrapConf.K8s.DashboardSvcUrl, orgId)
 	if err != nil {
 		return err
 	}
 
-	data.BootstrapConf.Tyk.UserAuth = userAuth
+	data.BootstrapConf.Tyk.Admin.Auth = userAuth
 
 	return nil
 }

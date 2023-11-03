@@ -58,8 +58,8 @@ func BootstrapTykOperatorSecret() error {
 
 func CreateTykOperatorSecret(clientset *kubernetes.Clientset) error {
 	secretData := map[string][]byte{
-		TykAuth: []byte(data.BootstrapConf.Tyk.UserAuth),
-		TykOrg:  []byte(data.BootstrapConf.Tyk.OrgId),
+		TykAuth: []byte(data.BootstrapConf.Tyk.Admin.Auth),
+		TykOrg:  []byte(data.BootstrapConf.Tyk.Org.ID),
 		TykMode: []byte(TykModePro),
 		TykUrl:  []byte(data.BootstrapConf.K8s.DashboardSvcUrl),
 	}
@@ -127,8 +127,8 @@ func BootstrapTykPortalSecret() error {
 
 func CreateTykPortalSecret(clientset *kubernetes.Clientset, secretName string) error {
 	secretData := map[string][]byte{
-		TykAuth: []byte(data.BootstrapConf.Tyk.UserAuth),
-		TykOrg:  []byte(data.BootstrapConf.Tyk.OrgId),
+		TykAuth: []byte(data.BootstrapConf.Tyk.Admin.Auth),
+		TykOrg:  []byte(data.BootstrapConf.Tyk.Org.ID),
 	}
 
 	objectMeta := metav1.ObjectMeta{Name: secretName}
