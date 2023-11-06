@@ -11,12 +11,9 @@ import (
 )
 
 func ValidateDashboardLicense(license string) (bool, error) {
-	token, err := jwt.Parse(license, func(token *jwt.Token) (interface{}, error) {
+	token, _ := jwt.Parse(license, func(token *jwt.Token) (interface{}, error) { // nolint:errcheck
 		return []byte(""), nil
 	})
-	if err != nil {
-		return false, err
-	}
 
 	if strings.ToLower(fmt.Sprint(token.Header["typ"])) == "jwt" {
 		exp := strings.Split(fmt.Sprintf("%f", token.Claims.(jwt.MapClaims)["exp"]), ".")[0]
