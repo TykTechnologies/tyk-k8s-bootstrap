@@ -72,8 +72,8 @@ func CheckIfRequiredDeploymentsAreReady() error {
 
 		fmt.Printf("The following pods have containers that are NOT ready: ")
 
-		for i := range notReadyPods {
-			fmt.Println(notReadyPods[i])
+		for podName, _ := range notReadyPods {
+			fmt.Println(podName)
 		}
 
 		time.Sleep(2 * time.Second)
