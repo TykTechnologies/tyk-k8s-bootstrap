@@ -4,8 +4,8 @@ This is a standalone app meant to help with bootstrap and deletion of the [tyk-s
 via Helm Charts
 
 > [!NOTE]
-<br>This app is needed only for [Tyk Self-Managed](https://tyk.io/docs/tyk-on-premises/) deployment!
-<br>[Tyk Open Source](https://tyk.io/docs/apim/open-source/) doesn't have a special bootstrap and in [Tyk Cloud](https://tyk.io/docs/tyk-cloud/) it is done for you (being a SaaS).
+This app is needed only for [Tyk Self-Managed](https://tyk.io/docs/tyk-on-premises/) deployment!
+<br/>[Tyk Open Source](https://tyk.io/docs/apim/open-source/) doesn't have a special bootstrap and in [Tyk Cloud](https://tyk.io/docs/tyk-cloud/) it is done for you (being a SaaS).
 
 ## What it does?
 
