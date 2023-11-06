@@ -1,51 +1,35 @@
-package predelete
+package k8s
 
 import (
 	"context"
 	"fmt"
-	"tyk/tyk/bootstrap/data"
+	"tyk/tyk/bootstrap/pkg/constants"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
-// maybe not needed?
-func ExecutePreDeleteOperations() error {
-	config, err := rest.InClusterConfig()
-	if err != nil {
+func (c *Client) ExecutePreDeleteOperations() error {
+	if err := c.deleteOperatorSecret(); err != nil {
 		return err
 	}
 
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
+	if err := c.deletePortalSecret(); err != nil {
 		return err
 	}
 
-	err = PreDeleteOperatorSecret(clientset)
-	if err != nil {
-		return err
-	}
-
-	err = PreDeletePortalSecret(clientset)
-	if err != nil {
-		return err
-	}
-
-	err = PreDeleteBootstrappingJobs(clientset)
-	if err != nil {
+	if err := c.deleteBootstrappingJobs(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
+func (c *Client) deleteOperatorSecret() error {
 	fmt.Println("Running pre delete hook")
 
-	secrets, err := clientset.
+	secrets, err := c.clientSet.
 		CoreV1().
-		Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
+		Secrets(c.appArgs.K8s.ReleaseNamespace).
 		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -55,10 +39,10 @@ func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
 
 	for i := range secrets.Items {
 		value := secrets.Items[i]
-		if value.Name == data.BootstrapConf.OperatorKubernetesSecretName {
-			err = clientset.
+		if value.Name == c.appArgs.OperatorKubernetesSecretName {
+			err = c.clientSet.
 				CoreV1().
-				Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
+				Secrets(c.appArgs.K8s.ReleaseNamespace).
 				Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
 
 			if err != nil {
@@ -80,10 +64,12 @@ func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
 	return nil
 }
 
-func PreDeletePortalSecret(clientset *kubernetes.Clientset) error {
+func (c *Client) deletePortalSecret() error {
 	fmt.Println("Running pre delete hook")
 
-	secrets, err := clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
+	secrets, err := c.clientSet.
+		CoreV1().
+		Secrets(c.appArgs.K8s.ReleaseNamespace).
 		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -93,8 +79,8 @@ func PreDeletePortalSecret(clientset *kubernetes.Clientset) error {
 
 	for i := range secrets.Items {
 		value := secrets.Items[i]
-		if data.BootstrapConf.DevPortalKubernetesSecretName == value.Name {
-			err = clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
+		if c.appArgs.DevPortalKubernetesSecretName == value.Name {
+			err = c.clientSet.CoreV1().Secrets(c.appArgs.K8s.ReleaseNamespace).
 				Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
 
 			if err != nil {
@@ -116,16 +102,16 @@ func PreDeletePortalSecret(clientset *kubernetes.Clientset) error {
 	return nil
 }
 
-// PreDeleteBootstrappingJobs deletes all jobs within the release namespace, that has specific label.
-func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
+// deleteBootstrappingJobs deletes all jobs within the release namespace, that has specific label.
+func (c *Client) deleteBootstrappingJobs() error {
 	// Usually, the raw strings in label selectors are not recommended.
-	jobs, err := clientset.
+	jobs, err := c.clientSet.
 		BatchV1().
-		Jobs(data.BootstrapConf.K8s.ReleaseNamespace).
+		Jobs(c.appArgs.K8s.ReleaseNamespace).
 		List(
 			context.TODO(),
 			metav1.ListOptions{
-				LabelSelector: data.TykBootstrapLabel,
+				LabelSelector: constants.TykBootstrapLabel,
 			},
 		)
 	if err != nil {
@@ -138,13 +124,13 @@ func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
 		job := jobs.Items[i]
 
 		// Do not need to delete pre-delete job. It will be deleted by Helm.
-		jobLabel := job.ObjectMeta.Labels[data.TykBootstrapLabel]
-		if jobLabel != data.TykBootstrapPreDeleteLabel {
+		jobLabel := job.ObjectMeta.Labels[constants.TykBootstrapLabel]
+		if jobLabel != constants.TykBootstrapPreDeleteLabel {
 			deletePropagationType := metav1.DeletePropagationBackground
 
-			err2 := clientset.
+			err2 := c.clientSet.
 				BatchV1().
-				Jobs(data.BootstrapConf.K8s.ReleaseNamespace).
+				Jobs(c.appArgs.K8s.ReleaseNamespace).
 				Delete(context.TODO(), job.Name, metav1.DeleteOptions{PropagationPolicy: &deletePropagationType})
 			if err2 != nil {
 				errCascading = err2

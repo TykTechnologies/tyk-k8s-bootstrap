@@ -1,32 +1,18 @@
-package readiness
+package k8s
 
 import (
 	"context"
 	"errors"
 	"fmt"
+
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 	"time"
-	"tyk/tyk/bootstrap/data"
-
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
-func CheckIfRequiredDeploymentsAreReady() error {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return err
-	}
-
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return err
-	}
-
+func (c *Client) CheckIfRequiredDeploymentsAreReady() error {
 	time.Sleep(5 * time.Second)
-
 	var attemptCount int
 
 	for {
@@ -35,7 +21,9 @@ func CheckIfRequiredDeploymentsAreReady() error {
 			return errors.New("attempted readiness check too many times")
 		}
 
-		pods, err := clientset.CoreV1().Pods(data.BootstrapConf.K8s.ReleaseNamespace).
+		pods, err := c.clientSet.
+			CoreV1().
+			Pods(c.appArgs.K8s.ReleaseNamespace).
 			List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return err
@@ -72,7 +60,7 @@ func CheckIfRequiredDeploymentsAreReady() error {
 
 		fmt.Printf("The following pods have containers that are NOT ready: ")
 
-		for podName, _ := range notReadyPods {
+		for podName := range notReadyPods {
 			fmt.Println(podName)
 		}
 

@@ -1,4 +1,4 @@
-package license
+package pkg
 
 import (
 	"errors"

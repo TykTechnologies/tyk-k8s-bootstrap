@@ -1,80 +1,81 @@
 package main
 
 import (
-	"crypto/tls"
+	"errors"
 	"fmt"
-	"net/http"
 	"os"
-	"tyk/tyk/bootstrap/data"
-	"tyk/tyk/bootstrap/helpers"
-	"tyk/tyk/bootstrap/readiness"
+	"tyk/tyk/bootstrap/k8s"
+	"tyk/tyk/bootstrap/pkg/config"
+	"tyk/tyk/bootstrap/tyk"
 )
 
 func main() {
-	err := data.InitPostInstall()
+	conf, err := config.NewConfig()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		exit(err)
 	}
 
-	err = readiness.CheckIfRequiredDeploymentsAreReady()
+	k8sClient, err := k8s.NewClient(conf)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		exit(err)
 	}
 
-	tp := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: data.BootstrapConf.InsecureSkipVerify},
-	}
-	client := http.Client{Transport: tp}
-
-	fmt.Println("Started creating dashboard org")
-
-	err = helpers.CheckForExistingOrganisation(client)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	if err = k8sClient.CheckIfRequiredDeploymentsAreReady(); err != nil {
+		exit(err)
 	}
 
-	fmt.Println("Finished creating dashboard org")
-	fmt.Println("Generating dashboard credentials")
+	orgExists := false
 
-	err = helpers.GenerateDashboardCredentials(client)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	tykSvc := tyk.NewService(conf)
+	if err = tykSvc.OrgExists(); err != nil {
+		if !errors.Is(err, tyk.ErrOrgExists) {
+			exit(err)
+		}
+
+		orgExists = true
 	}
 
-	fmt.Println("Finished generating dashboard credentials")
-	fmt.Println("Started bootstrapping operator secret")
+	if !orgExists {
+		if err = tykSvc.CreateOrganisation(); err != nil {
+			exit(err)
+		}
 
-	if data.BootstrapConf.OperatorKubernetesSecretName != "" {
-		err = helpers.BootstrapTykOperatorSecret()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+		if err = tykSvc.CreateAdmin(); err != nil {
+			exit(err)
+		}
+
+		if conf.BootstrapPortal {
+			if err = tykSvc.BootstrapClassicPortal(); err != nil {
+				exit(err)
+			}
+		}
+
+		if err = k8sClient.RestartDashboard(); err != nil {
+			exit(err)
 		}
 	}
 
-	fmt.Println("Finished bootstrapping operator secret\nStarted bootstrapping portal secret")
-
-	if data.BootstrapConf.DevPortalKubernetesSecretName != "" {
-		err = helpers.BootstrapTykPortalSecret()
+	if conf.OperatorKubernetesSecretName != "" {
+		err = k8sClient.BootstrapTykOperatorSecret()
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			exit(err)
 		}
 	}
 
-	fmt.Println("Started bootstrapping portal with requests to dashboard")
-
-	if data.BootstrapConf.BootstrapPortal {
-		err = helpers.BoostrapPortal(client)
+	if conf.DevPortalKubernetesSecretName != "" {
+		err = k8sClient.BootstrapTykPortalSecret()
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			exit(err)
 		}
 	}
 
-	fmt.Println("Finished bootstrapping portal")
+}
+
+func exit(err error) {
+	if err == nil {
+		os.Exit(0)
+	}
+
+	fmt.Printf("[ERROR]: %v", err)
+	os.Exit(1)
 }

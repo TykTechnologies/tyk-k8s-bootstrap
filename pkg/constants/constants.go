@@ -1,4 +1,4 @@
-package data
+package constants
 
 const (
 	TykBootstrapLabel                = "tyk.tyk.io/k8s-bootstrap"

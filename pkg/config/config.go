@@ -1,14 +1,7 @@
-package data
+package config
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/kelseyhightower/envconfig"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
 const prefix = "TYK_K8SBOOTSTRAP"
@@ -68,7 +61,8 @@ type TykAdmin struct {
 	// in Authorization header of the HTTP requests that will be sent to Tyk for bootstrapping.
 	// Also, if bootstrapping Tyk Operator Secret is enabled Auth corresponds to TykAuth field in the
 	// Kubernetes secret of Tyk Operator.
-	Auth string `ignored:"true"`
+	// Set it if Tyk Dashboard is already bootstrapped.
+	Auth string
 }
 
 type TykOrg struct {
@@ -91,78 +85,11 @@ type TykConf struct {
 	DashboardLicense string
 }
 
-var BootstrapConf = Config{}
-
-func InitBootstrapConf() error {
-	return envconfig.Process(prefix, &BootstrapConf)
-}
-
-func InitPostInstall() error {
-	err := InitBootstrapConf()
-	if err != nil {
-		return err
+func NewConfig() (*Config, error) {
+	conf := &Config{}
+	if err := envconfig.Process(prefix, conf); err != nil {
+		return nil, err
 	}
 
-	if BootstrapConf.BootstrapDashboard {
-		dashURL, err := discoverDashboardSvc()
-		if err != nil {
-			return err
-		}
-
-		BootstrapConf.K8s.DashboardSvcUrl = dashURL
-	}
-
-	return nil
-}
-
-// discoverDashboardSvc lists Service objects with constants.TykBootstrapReleaseLabel label that has
-// constants.TykBootstrapDashboardSvcLabel value and returns a service URL for Tyk Dashboard.
-func discoverDashboardSvc() (string, error) {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return "", err
-	}
-
-	c, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return "", err
-	}
-
-	ls := metav1.LabelSelector{MatchLabels: map[string]string{
-		TykBootstrapLabel: TykBootstrapDashboardSvcLabel,
-	}}
-
-	l := labels.Set(ls.MatchLabels).String()
-
-	services, err := c.
-		CoreV1().
-		Services(BootstrapConf.K8s.ReleaseNamespace).
-		List(context.TODO(), metav1.ListOptions{LabelSelector: l})
-	if err != nil {
-		return "", err
-	}
-
-	if len(services.Items) == 0 {
-		return "", fmt.Errorf("failed to find services with label %v\n", l)
-	}
-
-	if len(services.Items) > 1 {
-		fmt.Printf("[WARNING] Found multiple services with label %v\n", l)
-	}
-
-	service := services.Items[0]
-	if len(service.Spec.Ports) == 0 {
-		return "", fmt.Errorf("svc/%v/%v has no open ports\n", service.Name, service.Namespace)
-	}
-
-	if len(service.Spec.Ports) > 1 {
-		fmt.Printf("[WARNING] Found multiple open ports in svc/%v/%v\n", service.Name, service.Namespace)
-	}
-
-	return fmt.Sprintf("%s://%s.%s.svc.cluster.local:%d",
-		BootstrapConf.K8s.DashboardSvcProto,
-		service.Name,
-		BootstrapConf.K8s.ReleaseNamespace,
-		service.Spec.Ports[0].Port,
-	), nil
+	return conf, nil
 }

@@ -3,20 +3,23 @@ package main
 import (
 	"fmt"
 	"os"
-	"tyk/tyk/bootstrap/data"
-	"tyk/tyk/bootstrap/preinstallation"
+	"tyk/tyk/bootstrap/pkg"
+	"tyk/tyk/bootstrap/pkg/config"
 )
 
 func main() {
-	err := data.InitBootstrapConf()
+	conf, err := config.NewConfig()
 	if err != nil {
-		fmt.Printf("Failed to parse bootstrap environment variables, err: %v", err)
 		os.Exit(1)
 	}
 
-	err = preinstallation.PreHookInstall()
+	licenseIsValid, err := pkg.ValidateDashboardLicense(conf.Tyk.DashboardLicense)
 	if err != nil {
-		fmt.Printf("Failed to run pre-hook job, err: %v", err)
+		os.Exit(1)
+	}
+
+	if !licenseIsValid {
+		//return errors.New("provided license is invalid")
 		os.Exit(1)
 	}
 
