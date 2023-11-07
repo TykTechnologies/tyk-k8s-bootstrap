@@ -15,6 +15,9 @@ const (
 	tykURLKey  = "TYK_URL"
 )
 
+// BootstrapTykOperatorSecret bootstrap a Kubernetes Secret utilized by Tyk Operator.
+// If the system has the secret created already, it deletes the existing one and recreates
+// a secret for Tyk Operator.
 func (c *Client) BootstrapTykOperatorSecret() error {
 	secrets, err := c.clientSet.
 		CoreV1().
@@ -67,6 +70,9 @@ func (c *Client) BootstrapTykOperatorSecret() error {
 	return nil
 }
 
+// BootstrapTykPortalSecret creates a secret required by Tyk Developer Portal pod which
+// is not going to be ready until this secret is created. If there is a secret created already,
+// it deletes the existing one and recreates the secret.
 func (c *Client) BootstrapTykPortalSecret() error {
 	secrets, err := c.clientSet.
 		CoreV1().

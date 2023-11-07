@@ -8,6 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// ExecutePreDeleteOperations executes operations needed in pre-delete chart hook one by one.
 func (c *Client) ExecutePreDeleteOperations() error {
 	if err := c.deleteOperatorSecret(); err != nil {
 		return err
@@ -24,9 +25,8 @@ func (c *Client) ExecutePreDeleteOperations() error {
 	return nil
 }
 
+// deleteOperatorSecret deletes the Kubernetes secret created specifically for Tyk Operator.
 func (c *Client) deleteOperatorSecret() error {
-	fmt.Println("Running pre delete hook")
-
 	secrets, err := c.clientSet.
 		CoreV1().
 		Secrets(c.appArgs.K8s.ReleaseNamespace).
@@ -64,6 +64,7 @@ func (c *Client) deleteOperatorSecret() error {
 	return nil
 }
 
+// deletePortalSecret deletes the Kubernetes secret created specifically for Tyk Developer Portal.
 func (c *Client) deletePortalSecret() error {
 	fmt.Println("Running pre delete hook")
 

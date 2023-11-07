@@ -10,6 +10,7 @@ import (
 	"tyk/tyk/bootstrap/pkg/constants"
 )
 
+// RestartDashboard restarts Tyk Dashboard Deployment.
 func (c *Client) RestartDashboard() error {
 	if c.appArgs.K8s.DashboardDeploymentName == "" {
 		ls := metav1.LabelSelector{MatchLabels: map[string]string{
@@ -53,7 +54,7 @@ func (c *Client) RestartDashboard() error {
 	return err
 }
 
-// discoverDashboardSvc lists Service objects with constants.TykBootstrapReleaseLabel label that has
+// discoverDashboardSvc lists Service objects with constants.TykBootstrapLabel label that has
 // constants.TykBootstrapDashboardSvcLabel value and returns a service URL for Tyk Dashboard.
 func (c *Client) discoverDashboardSvc() (string, error) {
 	ls := metav1.LabelSelector{MatchLabels: map[string]string{

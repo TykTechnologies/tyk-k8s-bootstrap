@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+// CheckIfRequiredDeploymentsAreReady checks if the required Deployments are ready to be bootstrapped
+// or not. At the moment, it checks for Redis and Tyk Dashboard pods to be ready.
 func (c *Client) CheckIfRequiredDeploymentsAreReady() error {
 	time.Sleep(5 * time.Second)
 	var attemptCount int
