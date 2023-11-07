@@ -10,6 +10,8 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
+// ValidateDashboardLicense validates if the given license argument is a valid and not expired
+// JWT token.
 func ValidateDashboardLicense(license string) (bool, error) {
 	token, _ := jwt.Parse(license, func(token *jwt.Token) (interface{}, error) { // nolint:errcheck
 		return []byte(""), nil
