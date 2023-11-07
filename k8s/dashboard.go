@@ -3,11 +3,12 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"time"
+	"tyk/tyk/bootstrap/pkg/constants"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
-	"time"
-	"tyk/tyk/bootstrap/pkg/constants"
 )
 
 // RestartDashboard restarts Tyk Dashboard Deployment. Restarting Tyk Dashboard is needed to apply

@@ -68,14 +68,11 @@ func main() {
 			exit(err)
 		}
 	}
-
 }
 
 func exit(err error) {
-	if err == nil {
-		os.Exit(0)
+	if err != nil {
+		fmt.Printf("[ERROR]: %v", err)
+		os.Exit(1)
 	}
-
-	fmt.Printf("[ERROR]: %v", err)
-	os.Exit(1)
 }

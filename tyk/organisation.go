@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"errors"
 	"io"
-
-	"k8s.io/apimachinery/pkg/util/json"
 	"net/http"
-	ic "tyk/tyk/bootstrap/pkg/constants"
 	"tyk/tyk/bootstrap/tyk/api"
 	"tyk/tyk/bootstrap/tyk/internal/constants"
+
+	"k8s.io/apimachinery/pkg/util/json"
+
+	ic "tyk/tyk/bootstrap/pkg/constants"
 )
 
 var ErrOrgExists = errors.New("there shouldn't be any organisations, please " +

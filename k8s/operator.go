@@ -3,6 +3,7 @@ package k8s
 import (
 	"context"
 	"fmt"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -74,6 +75,7 @@ func (c *Client) BootstrapTykOperatorSecret() error {
 // is not going to be ready until this secret is created. If there is a secret created already,
 // it deletes the existing one and recreates the secret.
 func (c *Client) BootstrapTykPortalSecret() error {
+	// TODO(buraksekili): do we need to list the secrets? Can we just try getting the secret?
 	secrets, err := c.clientSet.
 		CoreV1().
 		Secrets(c.appArgs.K8s.ReleaseNamespace).
@@ -113,7 +115,7 @@ func (c *Client) BootstrapTykPortalSecret() error {
 			Data:       secretData,
 		}
 
-		_, err := c.clientSet.
+		_, err = c.clientSet.
 			CoreV1().
 			Secrets(c.appArgs.K8s.ReleaseNamespace).
 			Create(context.TODO(), &secret, metav1.CreateOptions{})

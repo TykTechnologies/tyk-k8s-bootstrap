@@ -10,18 +10,24 @@ import (
 func main() {
 	conf, err := config.NewConfig()
 	if err != nil {
-		os.Exit(1)
+		exit(err)
 	}
 
 	licenseIsValid, err := pkg.ValidateDashboardLicense(conf.Tyk.DashboardLicense)
 	if err != nil {
-		os.Exit(1)
+		exit(err)
 	}
 
 	if !licenseIsValid {
-		//return errors.New("provided license is invalid")
-		os.Exit(1)
+		exit(fmt.Errorf("provided license is invalid"))
 	}
 
 	fmt.Println("Pre-Hook bootstrapping succeeded, the provided license is valid!")
+}
+
+func exit(err error) {
+	if err != nil {
+		fmt.Printf("[ERROR]: %v", err)
+		os.Exit(1)
+	}
 }

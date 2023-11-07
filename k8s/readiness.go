@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 	"time"
+
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // CheckIfRequiredDeploymentsAreReady checks if the required Deployments are ready to be bootstrapped

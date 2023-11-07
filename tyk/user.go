@@ -5,11 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"k8s.io/apimachinery/pkg/util/json"
 	"net/http"
 	ic "tyk/tyk/bootstrap/pkg/constants"
 	"tyk/tyk/bootstrap/tyk/api"
 	"tyk/tyk/bootstrap/tyk/internal/constants"
+
+	"k8s.io/apimachinery/pkg/util/json"
 )
 
 // CreateAdmin creates admin and sets its password based on the credentials populated in config.Config.

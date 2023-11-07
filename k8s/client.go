@@ -2,10 +2,11 @@ package k8s
 
 import (
 	"fmt"
+	"tyk/tyk/bootstrap/pkg/config"
+
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"tyk/tyk/bootstrap/pkg/config"
 )
 
 type Client struct {
@@ -23,7 +24,10 @@ func NewClient(conf *config.Config) (*Client, error) {
 
 	config, err = rest.InClusterConfig()
 	if err != nil {
-		config, err = clientcmd.BuildConfigFromFlags("", clientcmd.NewDefaultClientConfigLoadingRules().GetDefaultFilename())
+		config, err = clientcmd.BuildConfigFromFlags(
+			"",
+			clientcmd.NewDefaultClientConfigLoadingRules().GetDefaultFilename(),
+		)
 		if err != nil {
 			return nil, err
 		}
