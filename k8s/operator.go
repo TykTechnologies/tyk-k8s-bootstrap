@@ -8,11 +8,11 @@ import (
 )
 
 const (
-	TykModePro = "pro"
-	TykAuth    = "TYK_AUTH"
-	TykOrg     = "TYK_ORG"
-	TykMode    = "TYK_MODE"
-	TykUrl     = "TYK_URL"
+	tykModePro = "pro"
+	tykModeKey = "TYK_MODE"
+	tykAuthKey = "TYK_AUTH"
+	tykOrgKey  = "TYK_ORG"
+	tykURLKey  = "TYK_URL"
 )
 
 func (c *Client) BootstrapTykOperatorSecret() error {
@@ -43,10 +43,10 @@ func (c *Client) BootstrapTykOperatorSecret() error {
 	}
 
 	secretData := map[string][]byte{
-		TykAuth: []byte(c.appArgs.Tyk.Admin.Auth),
-		TykOrg:  []byte(c.appArgs.Tyk.Org.ID),
-		TykMode: []byte(TykModePro),
-		TykUrl:  []byte(c.appArgs.K8s.DashboardSvcUrl),
+		tykAuthKey: []byte(c.appArgs.Tyk.Admin.Auth),
+		tykOrgKey:  []byte(c.appArgs.Tyk.Org.ID),
+		tykModeKey: []byte(tykModePro),
+		tykURLKey:  []byte(c.appArgs.K8s.DashboardSvcUrl),
 	}
 
 	objectMeta := metav1.ObjectMeta{Name: c.appArgs.OperatorKubernetesSecretName}
@@ -96,8 +96,8 @@ func (c *Client) BootstrapTykPortalSecret() error {
 
 	if c.appArgs.DevPortalKubernetesSecretName != "" {
 		secretData := map[string][]byte{
-			TykAuth: []byte(c.appArgs.Tyk.Admin.Auth),
-			TykOrg:  []byte(c.appArgs.Tyk.Org.ID),
+			tykAuthKey: []byte(c.appArgs.Tyk.Admin.Auth),
+			tykOrgKey:  []byte(c.appArgs.Tyk.Org.ID),
 		}
 
 		objectMeta := metav1.ObjectMeta{Name: c.appArgs.DevPortalKubernetesSecretName}
