@@ -1,11 +1,8 @@
 # Tyk-K8S-Bootstrap
 
-This is a standalone app meant to help with bootstrap and deletion of the [tyk-stack](https://github.com/TykTechnologies/tyk-charts/tree/main/tyk-stack) when installed
-via Helm Charts
-
-> [!NOTE]
-This app is needed only for [Tyk Self-Managed](https://tyk.io/docs/tyk-on-premises/) deployment!
-<br/>[Tyk Open Source](https://tyk.io/docs/apim/open-source/) doesn't have a special bootstrap and in [Tyk Cloud](https://tyk.io/docs/tyk-cloud/) it is done for you (being a SaaS).
+Tyk K8s Bootstrap comes with three applications to bootstrap [`tyk-stack`](https://github.com/TykTechnologies/tyk-charts/tree/main/tyk-stack) 
+and to create Kubernetes secrets that can be utilized in [Tyk Operator](https://tyk.io/docs/tyk-operator/) and 
+[`tyk-dev-portal`](https://github.com/TykTechnologies/tyk-charts/tree/main/components/tyk-dev-portal) chart.
 
 ## What it does?
 
@@ -42,10 +39,15 @@ setting up an organization and an admin user. Additionally, it generates Kuberne
 | TYK_K8SBOOTSTRAP_TYK_DASHBOARDLICENSE          | corresponds to the license key of Tyk Dashboard.                                                                                                                                                                      |
 
 ## Required RBAC roles for the app to work inside the Kubernetes cluster
-- delete
-- list
 
-## Useful debug/test tips/commands:
+Given that the applications operate as Chart Hooks to execute specific actions, such as creating Kubernetes Secrets, 
+validating component health statuses, and performing system cleanup during the deletion of the Helm Release, 
+they require specific RBAC rules for each operation.
+
+The required roles can be found here: 
+[`bootstrap-role.yaml`](https://github.com/TykTechnologies/tyk-charts/blob/main/components/tyk-bootstrap/templates/bootstrap-role.yml)
+
+## Useful testing tips and commands:
 
 ### Load images to Kind Cluster
 
