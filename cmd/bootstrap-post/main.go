@@ -55,15 +55,15 @@ func main() {
 		}
 	}
 
-	if conf.OperatorKubernetesSecretName != "" {
-		err = k8sClient.BootstrapTykOperatorSecret()
+	if conf.DevPortalKubernetesSecretName != "" {
+		err = k8sClient.BootstrapTykPortalSecret()
 		if err != nil {
 			exit(err)
 		}
 	}
 
-	if conf.DevPortalKubernetesSecretName != "" {
-		err = k8sClient.BootstrapTykPortalSecret()
+	if conf.OperatorKubernetesSecretName != "" {
+		err = k8sClient.BootstrapTykOperatorSecret()
 		if err != nil {
 			exit(err)
 		}
