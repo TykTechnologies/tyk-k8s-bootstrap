@@ -10,7 +10,8 @@ import (
 	"tyk/tyk/bootstrap/pkg/constants"
 )
 
-// RestartDashboard restarts Tyk Dashboard Deployment.
+// RestartDashboard restarts Tyk Dashboard Deployment. Restarting Tyk Dashboard is needed to apply
+// CName.
 func (c *Client) RestartDashboard() error {
 	if c.appArgs.K8s.DashboardDeploymentName == "" {
 		ls := metav1.LabelSelector{MatchLabels: map[string]string{
