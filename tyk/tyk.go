@@ -11,6 +11,7 @@ type Service struct {
 	appArgs    *config.Config
 }
 
+// NewService returns a new service to interact with Tyk.
 func NewService(args *config.Config) Service {
 	tp := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: args.InsecureSkipVerify},

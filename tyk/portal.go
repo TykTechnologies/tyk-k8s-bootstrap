@@ -12,6 +12,7 @@ import (
 	"tyk/tyk/bootstrap/tyk/internal/constants"
 )
 
+// BootstrapClassicPortal bootstraps Tyk Classic Portal.
 func (s *Service) BootstrapClassicPortal() error {
 	err := s.createPortalDefaultSettings()
 	if err != nil {
@@ -66,7 +67,6 @@ func (s *Service) setPortalCname() error {
 		return errors.New("failed to set portal cname")
 	}
 
-	// restarting the dashboard to apply the new cname
 	return nil
 }
 

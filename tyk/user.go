@@ -7,11 +7,12 @@ import (
 	"io"
 	"k8s.io/apimachinery/pkg/util/json"
 	"net/http"
-	constants2 "tyk/tyk/bootstrap/pkg/constants"
+	ic "tyk/tyk/bootstrap/pkg/constants"
 	"tyk/tyk/bootstrap/tyk/api"
 	"tyk/tyk/bootstrap/tyk/internal/constants"
 )
 
+// CreateAdmin creates admin and sets its password based on the credentials populated in config.Config.
 func (s *Service) CreateAdmin() error {
 	adminData, err := s.createAdmin()
 	if err != nil {
@@ -27,48 +28,6 @@ func (s *Service) CreateAdmin() error {
 
 	return nil
 }
-
-//func (s *Service) UserExists(userEmail string) (*NeededUserData, error) {
-//	s.l.Info("checking if users exists")
-//
-//	req, err := http.NewRequest(http.MethodGet, s.appArgs.K8s.DashboardSvcUrl+constants.ApiUsers, nil)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	req.Header.Set(data.AuthorizationHeader, s.appArgs.Tyk.Admin.Secret)
-//	req.Header.Set(data.ContentTypeHeader, "application/json")
-//
-//	res, err := s.httpClient.Do(req)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	bodyBytes, err := io.ReadAll(res.Body)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	users := api.ListUsersResp{}
-//
-//	fmt.Printf("%#v\n", string(bodyBytes))
-//
-//	err = json.Unmarshal(bodyBytes, &users)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	for i := range users {
-//		user := users[i]
-//		if user.EmailAddress == userEmail {
-//			s.appArgs.Tyk.Admin.Auth = user.AccessKey
-//			s.appArgs.Tyk.Org.ID = user.OrgID
-//			return &NeededUserData{UserId: user.ID, AuthCode: user.AccessKey}, nil
-//		}
-//	}
-//
-//	return nil, nil
-//}
 
 func (s *Service) setAdminPassword(adminData NeededUserData) error {
 	newPasswordData := api.ResetPasswordReq{
@@ -89,8 +48,8 @@ func (s *Service) setAdminPassword(adminData NeededUserData) error {
 		return err
 	}
 
-	req.Header.Set(constants2.AuthorizationHeader, adminData.AuthCode)
-	req.Header.Set(constants2.ContentTypeHeader, "application/json")
+	req.Header.Set(ic.AuthorizationHeader, adminData.AuthCode)
+	req.Header.Set(ic.ContentTypeHeader, "application/json")
 
 	res, err := s.httpClient.Do(req)
 	if err != nil {
@@ -108,8 +67,6 @@ type NeededUserData struct {
 	AuthCode string
 	UserId   string
 }
-
-var ErrUserExists = fmt.Errorf("User email already exists for this Org")
 
 func (s *Service) createAdmin() (NeededUserData, error) {
 	reqBody := api.CreateUserReq{
@@ -131,8 +88,8 @@ func (s *Service) createAdmin() (NeededUserData, error) {
 		return NeededUserData{}, err
 	}
 
-	req.Header.Set(constants2.AdminAuthHeader, s.appArgs.Tyk.Admin.Secret)
-	req.Header.Set(constants2.ContentTypeHeader, "application/json")
+	req.Header.Set(ic.AdminAuthHeader, s.appArgs.Tyk.Admin.Secret)
+	req.Header.Set(ic.ContentTypeHeader, "application/json")
 
 	res, err := s.httpClient.Do(req)
 	if err != nil {
@@ -145,7 +102,7 @@ func (s *Service) createAdmin() (NeededUserData, error) {
 	}
 
 	if res.StatusCode == http.StatusForbidden {
-		return NeededUserData{}, ErrUserExists
+		return NeededUserData{}, fmt.Errorf("user email already exists for this Org")
 	}
 
 	resp := api.CreateUserResp{}

@@ -4,25 +4,21 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"net/http"
-	constants2 "tyk/tyk/bootstrap/pkg/constants"
-	"tyk/tyk/bootstrap/tyk/api"
-	"tyk/tyk/bootstrap/tyk/internal/constants"
 
 	"k8s.io/apimachinery/pkg/util/json"
+	"net/http"
+	ic "tyk/tyk/bootstrap/pkg/constants"
+	"tyk/tyk/bootstrap/tyk/api"
+	"tyk/tyk/bootstrap/tyk/internal/constants"
 )
 
 var ErrOrgExists = errors.New("there shouldn't be any organisations, please " +
 	"disable bootstrapping to avoid losing data or delete " +
 	"already existing organisations")
 
+// OrgExists checks if the given Tyk Organisation is created or not.
+// It returns ErrOrgExists if the organisation exists.
 func (s *Service) OrgExists() error {
-	//s.l.Info(
-	//	"looking if organisation exists",
-	//	"Org Cname", s.appArgs.Tyk.Org.Cname,
-	//	"Org Name", s.appArgs.Tyk.Org.Name,
-	//)
-
 	orgsApiEndpoint := s.appArgs.K8s.DashboardSvcUrl + constants.AdminOrganisationsEndpoint
 
 	req, err := http.NewRequest(http.MethodGet, orgsApiEndpoint, nil)
@@ -30,8 +26,8 @@ func (s *Service) OrgExists() error {
 		return err
 	}
 
-	req.Header.Set(constants2.AdminAuthHeader, s.appArgs.Tyk.Admin.Secret)
-	req.Header.Set(constants2.ContentTypeHeader, "application/json")
+	req.Header.Set(ic.AdminAuthHeader, s.appArgs.Tyk.Admin.Secret)
+	req.Header.Set(ic.ContentTypeHeader, "application/json")
 
 	res, err := s.httpClient.Do(req)
 	if err != nil {
@@ -54,12 +50,6 @@ func (s *Service) OrgExists() error {
 		for _, organisation := range orgs.Organisations {
 			if organisation["owner_name"] == s.appArgs.Tyk.Org.Name ||
 				organisation["cname"] == s.appArgs.Tyk.Org.Cname {
-				//s.l.Info(
-				//	"looking if organisation exists",
-				//	"Org Cname", s.appArgs.Tyk.Org.Cname,
-				//	"Org Name", s.appArgs.Tyk.Org.Name,
-				//)
-
 				return ErrOrgExists
 			}
 		}
@@ -68,13 +58,8 @@ func (s *Service) OrgExists() error {
 	return nil
 }
 
+// CreateOrganisation creates organisation based on the information populated in the config.Config.
 func (s *Service) CreateOrganisation() error {
-	//s.l.Info(
-	//	"creating an organisation",
-	//	"Name", s.appArgs.Tyk.Org.Name,
-	//	"Cname", s.appArgs.Tyk.Org.Cname,
-	//)
-
 	createOrgData := api.CreateOrgReq{
 		OwnerName:    s.appArgs.Tyk.Org.Name,
 		CnameEnabled: true,
@@ -94,8 +79,8 @@ func (s *Service) CreateOrganisation() error {
 		return err
 	}
 
-	req.Header.Set(constants2.AdminAuthHeader, s.appArgs.Tyk.Admin.Secret)
-	req.Header.Set(constants2.ContentTypeHeader, "application/json")
+	req.Header.Set(ic.AdminAuthHeader, s.appArgs.Tyk.Admin.Secret)
+	req.Header.Set(ic.ContentTypeHeader, "application/json")
 
 	res, err := s.httpClient.Do(req)
 	if err != nil {
