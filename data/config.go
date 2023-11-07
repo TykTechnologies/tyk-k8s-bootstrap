@@ -24,12 +24,10 @@ type Config struct {
 
 	// OperatorKubernetesSecretName corresponds to the Kubernetes secret name that will be created for Tyk Operator.
 	// Set it to an empty to string to disable bootstrapping Kubernetes secret for Tyk Operator.
-	// By default, tyk-operator-conf
 	OperatorKubernetesSecretName string
 	// DevPortalKubernetesSecretName corresponds to the Kubernetes secret name that will be created for
 	// Tyk Developer Enterprise Portal. Set it to an empty to string to disable bootstrapping Kubernetes
 	// secret for Tyk Developer Enterprise Portal.
-	// By default, tyk-dev-portal-conf
 	DevPortalKubernetesSecretName string
 	// K8s consists of configurations for Kubernetes services of Tyk.
 	K8s K8sConf
@@ -42,7 +40,6 @@ type K8sConf struct {
 	// DashboardSvcUrl corresponds to the URL of Tyk Dashboard.
 	DashboardSvcUrl string
 	// DashboardSvcProto corresponds to Tyk Dashboard Service Protocol (either http or https).
-	// By default, it is http.
 	DashboardSvcProto string
 	// ReleaseNamespace corresponds to the namespace where Tyk is deployed via Helm Chart.
 	ReleaseNamespace string
