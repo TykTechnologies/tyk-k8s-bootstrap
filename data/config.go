@@ -23,11 +23,11 @@ type Config struct {
 	BootstrapPortal bool
 
 	// OperatorKubernetesSecretName corresponds to the Kubernetes secret name that will be created for Tyk Operator.
-	// Set it to an empty to string to disable bootstrapping Kubernetes secret for Tyk Operator.
+	// Set it to an empty string to disable bootstrapping Kubernetes secret for Tyk Operator.
 	OperatorKubernetesSecretName string
 	// DevPortalKubernetesSecretName corresponds to the Kubernetes secret name that will be created for
-	// Tyk Developer Enterprise Portal. Set it to an empty to string to disable bootstrapping Kubernetes
-	// secret for Tyk Developer Enterprise Portal.
+	// Tyk Developer Portal. Set it to an empty to string to disable bootstrapping Kubernetes
+	// secret for Tyk Developer Portal.
 	DevPortalKubernetesSecretName string
 	// K8s consists of configurations for Kubernetes services of Tyk.
 	K8s K8sConf
