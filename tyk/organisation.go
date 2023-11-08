@@ -3,11 +3,12 @@ package tyk
 import (
 	"bytes"
 	"errors"
-	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"tyk/tyk/bootstrap/tyk/api"
 	"tyk/tyk/bootstrap/tyk/internal/constants"
+
+	"github.com/sirupsen/logrus"
 
 	"k8s.io/apimachinery/pkg/util/json"
 

@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/sirupsen/logrus"
 	"os"
 	"tyk/tyk/bootstrap/k8s"
 	"tyk/tyk/bootstrap/pkg/config"
+
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -20,6 +21,7 @@ func main() {
 		log.Infof(
 			"Failed to parse log level %v, continuing with the default log level Info, err %v", conf.Log, err,
 		)
+
 		level = logrus.InfoLevel
 	}
 

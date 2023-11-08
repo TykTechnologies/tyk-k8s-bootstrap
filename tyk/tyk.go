@@ -2,9 +2,10 @@ package tyk
 
 import (
 	"crypto/tls"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"tyk/tyk/bootstrap/pkg/config"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Service struct {

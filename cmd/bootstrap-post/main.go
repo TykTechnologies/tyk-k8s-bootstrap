@@ -2,12 +2,13 @@ package main
 
 import (
 	"errors"
-	"github.com/sirupsen/logrus"
 	"os"
 	"strings"
 	"tyk/tyk/bootstrap/k8s"
 	"tyk/tyk/bootstrap/pkg/config"
 	"tyk/tyk/bootstrap/tyk"
+
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -23,6 +24,7 @@ func main() {
 		log.Infof(
 			"Failed to parse log level %v, continuing with the default log level Info, err %v", conf.Log, err,
 		)
+
 		level = logrus.InfoLevel
 	}
 
@@ -73,7 +75,6 @@ func main() {
 				exit(log, err)
 			}
 		}
-
 	}
 
 	// Common log message for organization existence

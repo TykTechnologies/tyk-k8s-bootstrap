@@ -1,8 +1,9 @@
 package k8s
 
 import (
-	"github.com/sirupsen/logrus"
 	"tyk/tyk/bootstrap/pkg/config"
+
+	"github.com/sirupsen/logrus"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
