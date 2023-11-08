@@ -1,7 +1,7 @@
 package k8s
 
 import (
-	"fmt"
+	"github.com/sirupsen/logrus"
 	"tyk/tyk/bootstrap/pkg/config"
 
 	"k8s.io/client-go/kubernetes"
@@ -12,12 +12,13 @@ import (
 type Client struct {
 	appArgs   *config.Config
 	clientSet *kubernetes.Clientset
+	l         *logrus.Entry
 }
 
 // NewClient returns a new Client to interact with Kubernetes. It first tries to instantiate in-cluster client;
 // otherwise, returns client via reading default kubeconfig located /$HOME/.kube/config
-func NewClient(conf *config.Config) (*Client, error) {
-	cl := &Client{}
+func NewClient(conf *config.Config, l *logrus.Entry) (*Client, error) {
+	cl := &Client{appArgs: conf, l: l}
 
 	var err error
 	var config *rest.Config
@@ -35,7 +36,7 @@ func NewClient(conf *config.Config) (*Client, error) {
 
 	cs, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		fmt.Printf("failed to generate client, err: %v", err)
+		cl.l.Errorf("failed to generate client, err: %v", err)
 		return nil, err
 	}
 
@@ -49,8 +50,6 @@ func NewClient(conf *config.Config) (*Client, error) {
 
 		conf.K8s.DashboardSvcUrl = dashURL
 	}
-
-	cl.appArgs = conf
 
 	return cl, nil
 }

@@ -78,7 +78,7 @@ func (c *Client) discoverDashboardSvc() (string, error) {
 	}
 
 	if len(services.Items) > 1 {
-		fmt.Printf("[WARNING] Found multiple services with label %v\n", l)
+		c.l.Warnf("Found multiple services with label %v", l)
 	}
 
 	service := services.Items[0]
@@ -87,7 +87,7 @@ func (c *Client) discoverDashboardSvc() (string, error) {
 	}
 
 	if len(service.Spec.Ports) > 1 {
-		fmt.Printf("[WARNING] Found multiple open ports in svc/%v/%v\n", service.Name, service.Namespace)
+		c.l.Warnf("Found multiple open ports in svc/%v/%v", service.Name, service.Namespace)
 	}
 
 	return fmt.Sprintf("%s://%s.%s.svc.cluster.local:%d",

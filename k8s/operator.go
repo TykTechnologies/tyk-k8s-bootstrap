@@ -2,8 +2,6 @@ package k8s
 
 import (
 	"context"
-	"fmt"
-
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -40,7 +38,7 @@ func (c *Client) BootstrapTykOperatorSecret() error {
 				return err
 			}
 
-			fmt.Println("A previously created operator secret was identified and deleted")
+			c.l.Info("A previously created operator secret was identified and deleted")
 
 			break
 		}
@@ -96,7 +94,7 @@ func (c *Client) BootstrapTykPortalSecret() error {
 				return err
 			}
 
-			fmt.Println("A previously created portal secret was identified and deleted")
+			c.l.Info("A previously created portal secret was identified and deleted")
 
 			break
 		}

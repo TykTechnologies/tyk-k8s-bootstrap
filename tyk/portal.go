@@ -3,7 +3,6 @@ package tyk
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	constants2 "tyk/tyk/bootstrap/pkg/constants"
@@ -39,7 +38,7 @@ func (s *Service) BootstrapClassicPortal() error {
 }
 
 func (s *Service) setPortalCname() error {
-	fmt.Println("Setting portal cname")
+	s.l.Debug("Setting portal cname")
 
 	cnameReq := api.CnameReq{Cname: s.appArgs.Tyk.Org.Cname}
 
@@ -68,11 +67,13 @@ func (s *Service) setPortalCname() error {
 		return errors.New("failed to set portal cname")
 	}
 
+	s.l.Debug("Set portal cname successfully")
+
 	return nil
 }
 
 func (s *Service) initialiseCatalogue() error {
-	fmt.Println("Initialising Catalogue")
+	s.l.Debug("Initialising Catalogue")
 
 	initCatalog := api.InitCatalogReq{OrgId: s.appArgs.Tyk.Org.ID}
 
@@ -101,7 +102,7 @@ func (s *Service) initialiseCatalogue() error {
 
 	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 
 	err = json.Unmarshal(bodyBytes, &resp)
@@ -109,11 +110,13 @@ func (s *Service) initialiseCatalogue() error {
 		return err
 	}
 
+	s.l.Debug("Initialized Catalogue successfully")
+
 	return nil
 }
 
 func (s *Service) createPortalHomePage() error {
-	fmt.Println("Creating portal homepage")
+	s.l.Debug("Creating portal homepage")
 
 	homepageContents := portalHomepageReq()
 
@@ -140,13 +143,15 @@ func (s *Service) createPortalHomePage() error {
 
 	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 
 	err = json.Unmarshal(bodyBytes, &resp)
 	if err != nil {
 		return err
 	}
+
+	s.l.Debug("Created portal homepage successfully")
 
 	return nil
 }
@@ -180,7 +185,7 @@ func portalHomepageReq() api.PortalHomepageReq {
 }
 
 func (s *Service) createPortalDefaultSettings() error {
-	fmt.Println("Creating bootstrap default settings")
+	s.l.Debug("Creating bootstrap default settings")
 
 	// TODO(buraksekili): DashboardSvcUrl can be populated via environment variables. So, the URL
 	// might have trailing slashes. Constructing the URL with raw string concatenating is not a good
@@ -200,6 +205,8 @@ func (s *Service) createPortalDefaultSettings() error {
 	if err != nil || res.StatusCode != http.StatusOK {
 		return err
 	}
+
+	s.l.Debug("Created bootstrap default settings successfully")
 
 	return nil
 }

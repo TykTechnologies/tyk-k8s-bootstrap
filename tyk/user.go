@@ -20,12 +20,12 @@ func (s *Service) CreateAdmin() error {
 		return err
 	}
 
+	s.appArgs.Tyk.Admin.Auth = adminData.AuthCode
+
 	err = s.setAdminPassword(adminData)
 	if err != nil {
 		return err
 	}
-
-	s.appArgs.Tyk.Admin.Auth = adminData.AuthCode
 
 	return nil
 }
@@ -70,6 +70,8 @@ type NeededUserData struct {
 }
 
 func (s *Service) createAdmin() (NeededUserData, error) {
+	s.l.Debug("Creating Admin User")
+
 	reqBody := api.CreateUserReq{
 		OrganisationId:  s.appArgs.Tyk.Org.ID,
 		FirstName:       s.appArgs.Tyk.Admin.FirstName,
@@ -112,6 +114,8 @@ func (s *Service) createAdmin() (NeededUserData, error) {
 	if err != nil {
 		return NeededUserData{}, err
 	}
+
+	s.l.Debug("Created Admin User successfully")
 
 	return NeededUserData{UserId: resp.Meta.ID, AuthCode: resp.Message}, nil
 }

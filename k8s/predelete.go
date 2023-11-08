@@ -2,7 +2,6 @@ package k8s
 
 import (
 	"context"
-	"fmt"
 	"tyk/tyk/bootstrap/pkg/constants"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -10,6 +9,8 @@ import (
 
 // ExecutePreDeleteOperations executes operations needed in pre-delete chart hook one by one.
 func (c *Client) ExecutePreDeleteOperations() error {
+	c.l.Info("Running pre delete hook")
+
 	if err := c.deleteOperatorSecret(); err != nil {
 		return err
 	}
@@ -21,6 +22,8 @@ func (c *Client) ExecutePreDeleteOperations() error {
 	if err := c.deleteBootstrappingJobs(); err != nil {
 		return err
 	}
+
+	c.l.Info("Run pre delete hook successfully")
 
 	return nil
 }
@@ -56,9 +59,9 @@ func (c *Client) deleteOperatorSecret() error {
 	}
 
 	if !found {
-		fmt.Println("A previously created operator secret has not been identified")
+		c.l.Info("A previously created operator secret has not been identified")
 	} else {
-		fmt.Println("A previously created operator secret was identified and deleted")
+		c.l.Info("A previously created operator secret was identified and deleted")
 	}
 
 	return nil
@@ -66,8 +69,6 @@ func (c *Client) deleteOperatorSecret() error {
 
 // deletePortalSecret deletes the Kubernetes secret created specifically for Tyk Developer Portal.
 func (c *Client) deletePortalSecret() error {
-	fmt.Println("Running pre delete hook")
-
 	secrets, err := c.clientSet.
 		CoreV1().
 		Secrets(c.appArgs.K8s.ReleaseNamespace).
@@ -88,7 +89,7 @@ func (c *Client) deletePortalSecret() error {
 				return err
 			}
 
-			fmt.Println("A previously created developer portal secret was identified and deleted")
+			c.l.Info("A previously created developer portal secret was identified and deleted")
 
 			notFound = false
 
@@ -97,7 +98,7 @@ func (c *Client) deletePortalSecret() error {
 	}
 
 	if notFound {
-		fmt.Println("A previously created developer portal secret has not been identified")
+		c.l.Info("A previously created developer portal secret has not been identified")
 	}
 
 	return nil

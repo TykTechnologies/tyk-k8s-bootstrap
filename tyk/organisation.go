@@ -3,6 +3,7 @@ package tyk
 import (
 	"bytes"
 	"errors"
+	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"tyk/tyk/bootstrap/tyk/api"
@@ -17,8 +18,8 @@ var ErrOrgExists = errors.New("there shouldn't be any organisations, please " +
 	"disable bootstrapping to avoid losing data or delete " +
 	"already existing organisations")
 
-// OrgExists checks if the given Tyk Organisation is created or not.
-// It returns ErrOrgExists if the organisation exists.
+// OrgExists checks if the given Tyk Organisation is created or not by
+// checking owner_name and cname of the Organisation. It returns ErrOrgExists if the organisation exists.
 func (s *Service) OrgExists() error {
 	orgsApiEndpoint := s.appArgs.K8s.DashboardSvcUrl + constants.AdminOrganisationsEndpoint
 
@@ -51,16 +52,31 @@ func (s *Service) OrgExists() error {
 		for _, organisation := range orgs.Organisations {
 			if organisation["owner_name"] == s.appArgs.Tyk.Org.Name ||
 				organisation["cname"] == s.appArgs.Tyk.Org.Cname {
+				s.l.WithFields(logrus.Fields{
+					"organisationName":  s.appArgs.Tyk.Org.Name,
+					"organisationCname": s.appArgs.Tyk.Org.Cname,
+				}).Debug("Organisation exists")
+
 				return ErrOrgExists
 			}
 		}
 	}
+
+	s.l.WithFields(logrus.Fields{
+		"organisationName":  s.appArgs.Tyk.Org.Name,
+		"organisationCname": s.appArgs.Tyk.Org.Cname,
+	}).Debug("Organisation does not exist")
 
 	return nil
 }
 
 // CreateOrganisation creates organisation based on the information populated in the config.Config.
 func (s *Service) CreateOrganisation() error {
+	s.l.WithFields(logrus.Fields{
+		"organisationName":  s.appArgs.Tyk.Org.Name,
+		"organisationCname": s.appArgs.Tyk.Org.Cname,
+	}).Debug("Creating Organisation")
+
 	createOrgData := api.CreateOrgReq{
 		OwnerName:    s.appArgs.Tyk.Org.Name,
 		CnameEnabled: true,
@@ -101,6 +117,11 @@ func (s *Service) CreateOrganisation() error {
 	}
 
 	s.appArgs.Tyk.Org.ID = createOrgResp.Meta
+
+	s.l.WithFields(logrus.Fields{
+		"organisationName":  s.appArgs.Tyk.Org.Name,
+		"organisationCname": s.appArgs.Tyk.Org.Cname,
+	}).Debug("Created Organisation successfully")
 
 	return nil
 }

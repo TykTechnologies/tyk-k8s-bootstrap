@@ -3,7 +3,6 @@ package k8s
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -31,7 +30,7 @@ func (c *Client) CheckIfRequiredDeploymentsAreReady() error {
 			return err
 		}
 
-		fmt.Printf("There are %d other pods in the cluster\n", len(pods.Items)-1)
+		c.l.Infof("There are %d other pods in the cluster", len(pods.Items)-1)
 
 		var requiredPods []v1.Pod
 
@@ -57,13 +56,12 @@ func (c *Client) CheckIfRequiredDeploymentsAreReady() error {
 		}
 
 		if len(notReadyPods) == 0 {
+			c.l.Info("All Pods are ready")
 			return nil
 		}
 
-		fmt.Printf("The following pods have containers that are NOT ready: ")
-
 		for podName := range notReadyPods {
-			fmt.Println(podName)
+			c.l.Infof("Pod: %v has containers that are NOT ready", podName)
 		}
 
 		time.Sleep(2 * time.Second)

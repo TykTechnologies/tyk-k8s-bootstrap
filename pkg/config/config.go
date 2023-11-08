@@ -7,6 +7,10 @@ import (
 const prefix = "TYK_K8SBOOTSTRAP"
 
 type Config struct {
+	// Log sets the level of the logrus logger.
+	// The default is `info`
+	Log string `default:"info"`
+
 	// InsecureSkipVerify enables InsecureSkipVerify options in http request sent to Tyk - might be useful
 	// for Tyk Dashboard with self-signed certs.
 	InsecureSkipVerify bool
