@@ -3,7 +3,6 @@ package k8s
 import (
 	"context"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -19,14 +18,8 @@ const (
 // If the system has the secret created already, it deletes the existing one and recreates
 // a secret for Tyk Operator.
 func (c *Client) BootstrapTykOperatorSecret() error {
-	err := c.clientSet.
-		CoreV1().
-		Secrets(c.appArgs.K8s.ReleaseNamespace).
-		Delete(context.TODO(), c.appArgs.OperatorKubernetesSecretName, metav1.DeleteOptions{})
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			return err
-		}
+	if err := c.deleteSecret(c.appArgs.OperatorKubernetesSecretName, true); err != nil {
+		return err
 	}
 
 	secretData := map[string][]byte{
@@ -43,7 +36,7 @@ func (c *Client) BootstrapTykOperatorSecret() error {
 		Data:       secretData,
 	}
 
-	_, err = c.clientSet.
+	_, err := c.clientSet.
 		CoreV1().
 		Secrets(c.appArgs.K8s.ReleaseNamespace).
 		Create(context.TODO(), &secret, metav1.CreateOptions{})
