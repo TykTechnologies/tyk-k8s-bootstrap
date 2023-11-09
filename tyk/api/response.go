@@ -13,21 +13,6 @@ type OrgAPIResp struct {
 	Pages         int                      `json:"pages"`
 }
 
-type GetUserResp struct {
-	APIModel        struct{}          `json:"api_model"`
-	FirstName       string            `json:"first_name"`
-	LastName        string            `json:"last_name"`
-	EmailAddress    string            `json:"email_address"`
-	Password        string            `json:"password"`
-	OrgID           string            `json:"org_id"`
-	Active          bool              `json:"active"`
-	ID              string            `json:"id"`
-	AccessKey       string            `json:"access_key"`
-	UserPermissions map[string]string `json:"user_permissions"`
-}
-
-type ListUsersResp []GetUserResp
-
 type CreateUserResp struct {
 	Status  string `json:"Status"`
 	Message string `json:"Message"`

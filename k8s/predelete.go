@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"tyk/tyk/bootstrap/pkg/constants"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,11 +12,11 @@ import (
 func (c *Client) ExecutePreDeleteOperations() error {
 	c.l.Info("Running pre delete hook")
 
-	if err := c.deleteOperatorSecret(); err != nil {
+	if err := c.deleteSecret(c.appArgs.OperatorKubernetesSecretName, true); err != nil {
 		return err
 	}
 
-	if err := c.deletePortalSecret(); err != nil {
+	if err := c.deleteSecret(c.appArgs.DevPortalKubernetesSecretName, true); err != nil {
 		return err
 	}
 
@@ -28,77 +29,18 @@ func (c *Client) ExecutePreDeleteOperations() error {
 	return nil
 }
 
-// deleteOperatorSecret deletes the Kubernetes secret created specifically for Tyk Operator.
-func (c *Client) deleteOperatorSecret() error {
-	secrets, err := c.clientSet.
+// deleteSecret deletes the Kubernetes secret with given name.
+func (c *Client) deleteSecret(secretName string, ignoreNotFound bool) error {
+	err := c.clientSet.
 		CoreV1().
 		Secrets(c.appArgs.K8s.ReleaseNamespace).
-		List(context.TODO(), metav1.ListOptions{})
+		Delete(context.TODO(), secretName, metav1.DeleteOptions{})
 	if err != nil {
-		return err
-	}
-
-	found := false
-
-	for i := range secrets.Items {
-		value := secrets.Items[i]
-		if value.Name == c.appArgs.OperatorKubernetesSecretName {
-			err = c.clientSet.
-				CoreV1().
-				Secrets(c.appArgs.K8s.ReleaseNamespace).
-				Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
-
-			if err != nil {
-				return err
-			}
-
-			found = true
-
-			break
+		if errors.IsNotFound(err) && ignoreNotFound {
+			return nil
 		}
-	}
 
-	if !found {
-		c.l.Info("A previously created operator secret has not been identified")
-	} else {
-		c.l.Info("A previously created operator secret was identified and deleted")
-	}
-
-	return nil
-}
-
-// deletePortalSecret deletes the Kubernetes secret created specifically for Tyk Developer Portal.
-func (c *Client) deletePortalSecret() error {
-	secrets, err := c.clientSet.
-		CoreV1().
-		Secrets(c.appArgs.K8s.ReleaseNamespace).
-		List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
 		return err
-	}
-
-	notFound := true
-
-	for i := range secrets.Items {
-		value := secrets.Items[i]
-		if c.appArgs.DevPortalKubernetesSecretName == value.Name {
-			err = c.clientSet.CoreV1().Secrets(c.appArgs.K8s.ReleaseNamespace).
-				Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
-
-			if err != nil {
-				return err
-			}
-
-			c.l.Info("A previously created developer portal secret was identified and deleted")
-
-			notFound = false
-
-			break
-		}
-	}
-
-	if notFound {
-		c.l.Info("A previously created developer portal secret has not been identified")
 	}
 
 	return nil

@@ -43,14 +43,5 @@ func NewClient(conf *config.Config, l *logrus.Entry) (*Client, error) {
 
 	cl.clientSet = cs
 
-	if conf.BootstrapDashboard {
-		dashURL, err := cl.discoverDashboardSvc()
-		if err != nil {
-			return nil, err
-		}
-
-		conf.K8s.DashboardSvcUrl = dashURL
-	}
-
 	return cl, nil
 }

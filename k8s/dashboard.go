@@ -56,9 +56,13 @@ func (c *Client) RestartDashboard() error {
 	return err
 }
 
-// discoverDashboardSvc lists Service objects with constants.TykBootstrapLabel label that has
+func (c *Client) Get() string {
+	return c.appArgs.K8s.DashboardSvcUrl
+}
+
+// DiscoverDashboardSvc lists Service objects with constants.TykBootstrapLabel label that has
 // constants.TykBootstrapDashboardSvcLabel value and returns a service URL for Tyk Dashboard.
-func (c *Client) discoverDashboardSvc() (string, error) {
+func (c *Client) DiscoverDashboardSvc() (string, error) {
 	ls := metav1.LabelSelector{MatchLabels: map[string]string{
 		constants.TykBootstrapLabel: constants.TykBootstrapDashboardSvcLabel,
 	}}
@@ -90,10 +94,12 @@ func (c *Client) discoverDashboardSvc() (string, error) {
 		c.l.Warnf("Found multiple open ports in svc/%v/%v", service.Name, service.Namespace)
 	}
 
-	return fmt.Sprintf("%s://%s.%s.svc.cluster.local:%d",
+	c.appArgs.K8s.DashboardSvcUrl = fmt.Sprintf("%s://%s.%s.svc.cluster.local:%d",
 		c.appArgs.K8s.DashboardSvcProto,
 		service.Name,
 		c.appArgs.K8s.ReleaseNamespace,
 		service.Spec.Ports[0].Port,
-	), nil
+	)
+
+	return c.appArgs.K8s.DashboardSvcUrl, nil
 }

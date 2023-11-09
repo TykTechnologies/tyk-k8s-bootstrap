@@ -14,8 +14,8 @@ type Service struct {
 	l          *logrus.Entry
 }
 
-// NewService returns a new service to interact with Tyk.
-func NewService(args *config.Config, l *logrus.Entry) Service {
+// NewClient returns a new service to interact with Tyk.
+func NewClient(args *config.Config, l *logrus.Entry) Service {
 	tp := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: args.InsecureSkipVerify},
 	}

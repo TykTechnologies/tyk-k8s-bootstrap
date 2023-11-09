@@ -2,7 +2,6 @@ package tyk
 
 import (
 	"bytes"
-	"errors"
 	"io"
 	"net/http"
 	"tyk/tyk/bootstrap/tyk/api"
@@ -15,18 +14,14 @@ import (
 	ic "tyk/tyk/bootstrap/pkg/constants"
 )
 
-var ErrOrgExists = errors.New("there shouldn't be any organisations, please " +
-	"disable bootstrapping to avoid losing data or delete " +
-	"already existing organisations")
-
 // OrgExists checks if the given Tyk Organisation is created or not by
-// checking owner_name and cname of the Organisation. It returns ErrOrgExists if the organisation exists.
-func (s *Service) OrgExists() error {
+// checking owner_name and cname of the Organisation.
+func (s *Service) OrgExists() (bool, error) {
 	orgsApiEndpoint := s.appArgs.K8s.DashboardSvcUrl + constants.AdminOrganisationsEndpoint
 
 	req, err := http.NewRequest(http.MethodGet, orgsApiEndpoint, nil)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	req.Header.Set(ic.AdminAuthHeader, s.appArgs.Tyk.Admin.Secret)
@@ -34,19 +29,19 @@ func (s *Service) OrgExists() error {
 
 	res, err := s.httpClient.Do(req)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	orgs := api.OrgAPIResp{}
 
 	err = json.Unmarshal(bodyBytes, &orgs)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if len(orgs.Organisations) > 0 {
@@ -58,7 +53,7 @@ func (s *Service) OrgExists() error {
 					"organisationCname": s.appArgs.Tyk.Org.Cname,
 				}).Debug("Organisation exists")
 
-				return ErrOrgExists
+				return true, nil
 			}
 		}
 	}
@@ -68,7 +63,7 @@ func (s *Service) OrgExists() error {
 		"organisationCname": s.appArgs.Tyk.Org.Cname,
 	}).Debug("Organisation does not exist")
 
-	return nil
+	return false, nil
 }
 
 // CreateOrganisation creates organisation based on the information populated in the config.Config.
