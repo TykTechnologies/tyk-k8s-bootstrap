@@ -32,8 +32,15 @@ func (c *Client) RestartDashboard() error {
 			return fmt.Errorf("failed to list Tyk Dashboard Deployment, err: %v", err)
 		}
 
-		for i := range deployments.Items {
-			c.appArgs.K8s.DashboardDeploymentName = deployments.Items[i].ObjectMeta.Name
+		if len(deployments.Items) == 0 {
+			c.l.Warnf("failed to find Deploymet with label %v in %v",
+				c.appArgs.K8s.ReleaseNamespace,
+				labels.Set(ls.MatchLabels).String(),
+			)
+		}
+
+		if len(deployments.Items) > 0 {
+			c.appArgs.K8s.DashboardDeploymentName = deployments.Items[0].ObjectMeta.Name
 		}
 	}
 
@@ -54,10 +61,6 @@ func (c *Client) RestartDashboard() error {
 		)
 
 	return err
-}
-
-func (c *Client) Get() string {
-	return c.appArgs.K8s.DashboardSvcUrl
 }
 
 // DiscoverDashboardSvc lists Service objects with constants.TykBootstrapLabel label that has
