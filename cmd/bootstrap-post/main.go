@@ -85,7 +85,7 @@ func main() {
 	}
 
 	// Common log message for organization existence
-	if orgExists && conf.DevPortalKubernetesSecretName != "" || conf.OperatorKubernetesSecretName != "" {
+	if orgExists && (conf.DevPortalKubernetesSecretName != "" || conf.OperatorKubernetesSecretName) != "" {
 		log.WithFields(logrus.Fields{
 			"organisationName":  conf.Tyk.Org.Name,
 			"organisationCName": conf.Tyk.Org.Cname,
