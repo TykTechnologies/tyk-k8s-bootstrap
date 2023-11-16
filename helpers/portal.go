@@ -6,6 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
+	"time"
+	"tyk/tyk/bootstrap/data"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -13,10 +16,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"net/http"
-	"time"
-	"tyk/tyk/bootstrap/constants"
-	"tyk/tyk/bootstrap/data"
 )
 
 func BoostrapPortal(client http.Client) error {
@@ -54,19 +53,23 @@ type CnameRequest struct {
 func SetPortalCname(client http.Client) error {
 	fmt.Println("Setting portal cname")
 
-	cnameReq := CnameRequest{Cname: data.AppConfig.Cname}
+	cnameReq := CnameRequest{Cname: data.BootstrapConf.Tyk.Org.Cname}
+
 	reqBody, err := json.Marshal(cnameReq)
 	if err != nil {
 		return err
 	}
-	reqData := bytes.NewReader(reqBody)
 
-	req, err := http.NewRequest("PUT", data.AppConfig.DashboardUrl+ApiPortalCnameEndpoint, reqData)
+	req, err := http.NewRequest(
+		http.MethodPut,
+		data.BootstrapConf.K8s.DashboardSvcUrl+ApiPortalCnameEndpoint,
+		bytes.NewReader(reqBody),
+	)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Authorization", data.AppConfig.UserAuth)
+	req.Header.Set(data.AuthorizationHeader, data.BootstrapConf.Tyk.Admin.Auth)
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -84,18 +87,23 @@ func SetPortalCname(client http.Client) error {
 func InitialiseCatalogue(client http.Client) error {
 	fmt.Println("Initialising Catalogue")
 
-	initCatalog := InitCatalogReq{OrgId: data.AppConfig.OrgId}
+	initCatalog := InitCatalogReq{OrgId: data.BootstrapConf.Tyk.Org.ID}
+
 	reqBody, err := json.Marshal(initCatalog)
 	if err != nil {
 		return err
 	}
-	reqData := bytes.NewReader(reqBody)
-	req, err := http.NewRequest("POST", data.AppConfig.DashboardUrl+ApiPortalCatalogueEndpoint, reqData)
+
+	req, err := http.NewRequest(
+		http.MethodPost,
+		data.BootstrapConf.K8s.DashboardSvcUrl+ApiPortalCatalogueEndpoint,
+		bytes.NewReader(reqBody),
+	)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Authorization", data.AppConfig.UserAuth)
+	req.Header.Set(data.AuthorizationHeader, data.BootstrapConf.Tyk.Admin.Auth)
 
 	res, err := client.Do(req)
 	if err != nil || res.StatusCode != http.StatusOK {
@@ -114,8 +122,6 @@ func InitialiseCatalogue(client http.Client) error {
 		return err
 	}
 
-	data.AppConfig.CatalogId = resp.Message
-
 	return nil
 }
 
@@ -123,21 +129,28 @@ func CreatePortalHomepage(client http.Client) error {
 	fmt.Println("Creating portal homepage")
 
 	homepageContents := GetPortalHomepage()
+
 	reqBody, err := json.Marshal(homepageContents)
 	if err != nil {
 		return err
 	}
+
 	reqData := bytes.NewReader(reqBody)
-	req, err := http.NewRequest("POST", data.AppConfig.DashboardUrl+ApiPortalPagesEndpoint, reqData)
-	req.Header.Set("Authorization", data.AppConfig.UserAuth)
+
+	req, err := http.NewRequest(http.MethodPost, data.BootstrapConf.K8s.DashboardSvcUrl+ApiPortalPagesEndpoint, reqData)
 	if err != nil {
 		return err
 	}
+
+	req.Header.Set(data.AuthorizationHeader, data.BootstrapConf.Tyk.Admin.Auth)
+
 	res, err := client.Do(req)
 	if err != nil || res.StatusCode != http.StatusOK {
 		return err
 	}
+
 	resp := DashboardGeneralResponse{}
+
 	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println(err)
@@ -177,7 +190,6 @@ func GetPortalHomepage() PortalHomepageRequest {
 			PanelTwoTitle:       "Panel 2 Title",
 		},
 	}
-
 }
 
 type PortalHomepageRequest struct {
@@ -211,8 +223,15 @@ type PortalFields struct {
 func CreatePortalDefaultSettings(client http.Client) error {
 	fmt.Println("Creating bootstrap default settings")
 
-	req, err := http.NewRequest("POST", data.AppConfig.DashboardUrl+ApiPortalConfigurationEndpoint, nil)
-	req.Header.Set("Authorization", data.AppConfig.UserAuth)
+	// TODO(buraksekili): DashboardSvcUrl can be populated via environment variables. So, the URL
+	// might have trailing slashes. Constructing the URL with raw string concatenating is not a good
+	// approach here. Needs refactoring.
+	req, err := http.NewRequest(
+		http.MethodPut,
+		data.BootstrapConf.K8s.DashboardSvcUrl+ApiPortalConfigurationEndpoint,
+		nil,
+	)
+	req.Header.Set(data.AuthorizationHeader, data.BootstrapConf.Tyk.Admin.Auth)
 
 	if err != nil {
 		return err
@@ -237,14 +256,14 @@ func RestartDashboard() error {
 		return err
 	}
 
-	if data.AppConfig.DashboardDeploymentName == "" {
+	if data.BootstrapConf.K8s.DashboardDeploymentName == "" {
 		ls := metav1.LabelSelector{MatchLabels: map[string]string{
-			constants.TykBootstrapLabel: constants.TykBootstrapDashboardDeployLabel,
+			data.TykBootstrapLabel: data.TykBootstrapDashboardDeployLabel,
 		}}
 
 		deployments, err := clientset.
 			AppsV1().
-			Deployments(data.AppConfig.TykPodNamespace).
+			Deployments(data.BootstrapConf.K8s.ReleaseNamespace).
 			List(
 				context.TODO(),
 				metav1.ListOptions{
@@ -252,26 +271,29 @@ func RestartDashboard() error {
 				},
 			)
 		if err != nil {
-			return errors.New(fmt.Sprintf("failed to list Tyk Dashboard Deployment, err: %v", err))
+			return fmt.Errorf("failed to list Tyk Dashboard Deployment, err: %v", err)
 		}
 
-		for _, deployment := range deployments.Items {
-			data.AppConfig.DashboardDeploymentName = deployment.ObjectMeta.Name
+		for i := range deployments.Items {
+			data.BootstrapConf.K8s.DashboardDeploymentName = deployments.Items[i].ObjectMeta.Name
 		}
 	}
 
-	timeStamp := fmt.Sprintf(`{"spec": {"template": {"metadata": {"annotations": {"kubectl.kubernetes.io/restartedAt": "%s"}}}}}`,
-		time.Now().Format("20060102150405"))
+	timeStamp := fmt.Sprintf(
+		`{"spec": {"template": {"metadata": {"annotations": {"kubectl.kubernetes.io/restartedAt": "%s"}}}}}`,
+		time.Now().Format("20060102150405"),
+	)
 
 	_, err = clientset.
 		AppsV1().
-		Deployments(data.AppConfig.TykPodNamespace).
+		Deployments(data.BootstrapConf.K8s.ReleaseNamespace).
 		Patch(
 			context.TODO(),
-			data.AppConfig.DashboardDeploymentName,
+			data.BootstrapConf.K8s.DashboardDeploymentName,
 			types.StrategicMergePatchType,
 			[]byte(timeStamp),
 			metav1.PatchOptions{},
 		)
+
 	return err
 }

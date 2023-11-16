@@ -3,8 +3,6 @@ package predelete
 import (
 	"context"
 	"fmt"
-	"os"
-	"tyk/tyk/bootstrap/constants"
 	"tyk/tyk/bootstrap/data"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -44,19 +42,31 @@ func ExecutePreDeleteOperations() error {
 
 func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
 	fmt.Println("Running pre delete hook")
-	secrets, err := clientset.CoreV1().Secrets(os.Getenv("TYK_POD_NAMESPACE")).List(context.TODO(), metav1.ListOptions{})
+
+	secrets, err := clientset.
+		CoreV1().
+		Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
+		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
 
 	found := false
-	for _, value := range secrets.Items {
-		if value.Name == os.Getenv("OPERATOR_SECRET_NAME") {
-			err = clientset.CoreV1().Secrets(os.Getenv("TYK_POD_NAMESPACE")).Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
+
+	for i := range secrets.Items {
+		value := secrets.Items[i]
+		if value.Name == data.BootstrapConf.OperatorKubernetesSecretName {
+			err = clientset.
+				CoreV1().
+				Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
+				Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
+
 			if err != nil {
 				return err
 			}
+
 			found = true
+
 			break
 		}
 	}
@@ -66,30 +76,35 @@ func PreDeleteOperatorSecret(clientset *kubernetes.Clientset) error {
 	} else {
 		fmt.Println("A previously created operator secret was identified and deleted")
 	}
+
 	return nil
 }
 
 func PreDeletePortalSecret(clientset *kubernetes.Clientset) error {
 	fmt.Println("Running pre delete hook")
-	ns := data.AppConfig.TykPodNamespace
 
-	secrets, err := clientset.CoreV1().Secrets(ns).
+	secrets, err := clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
 		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
 
 	notFound := true
-	for _, value := range secrets.Items {
-		if data.AppConfig.DeveloperPortalSecretName == value.Name {
-			err = clientset.CoreV1().Secrets(ns).
+
+	for i := range secrets.Items {
+		value := secrets.Items[i]
+		if data.BootstrapConf.DevPortalKubernetesSecretName == value.Name {
+			err = clientset.CoreV1().Secrets(data.BootstrapConf.K8s.ReleaseNamespace).
 				Delete(context.TODO(), value.Name, metav1.DeleteOptions{})
 
 			if err != nil {
 				return err
 			}
+
 			fmt.Println("A previously created developer portal secret was identified and deleted")
+
 			notFound = false
+
 			break
 		}
 	}
@@ -106,11 +121,11 @@ func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
 	// Usually, the raw strings in label selectors are not recommended.
 	jobs, err := clientset.
 		BatchV1().
-		Jobs(data.AppConfig.TykPodNamespace).
+		Jobs(data.BootstrapConf.K8s.ReleaseNamespace).
 		List(
 			context.TODO(),
 			metav1.ListOptions{
-				LabelSelector: fmt.Sprintf("%s", constants.TykBootstrapLabel),
+				LabelSelector: data.TykBootstrapLabel,
 			},
 		)
 	if err != nil {
@@ -118,15 +133,18 @@ func PreDeleteBootstrappingJobs(clientset *kubernetes.Clientset) error {
 	}
 
 	var errCascading error
-	for _, job := range jobs.Items {
+
+	for i := range jobs.Items {
+		job := jobs.Items[i]
+
 		// Do not need to delete pre-delete job. It will be deleted by Helm.
-		jobLabel := job.ObjectMeta.Labels[constants.TykBootstrapLabel]
-		if jobLabel != constants.TykBootstrapPreDeleteLabel {
+		jobLabel := job.ObjectMeta.Labels[data.TykBootstrapLabel]
+		if jobLabel != data.TykBootstrapPreDeleteLabel {
 			deletePropagationType := metav1.DeletePropagationBackground
 
 			err2 := clientset.
 				BatchV1().
-				Jobs(data.AppConfig.TykPodNamespace).
+				Jobs(data.BootstrapConf.K8s.ReleaseNamespace).
 				Delete(context.TODO(), job.Name, metav1.DeleteOptions{PropagationPolicy: &deletePropagationType})
 			if err2 != nil {
 				errCascading = err2

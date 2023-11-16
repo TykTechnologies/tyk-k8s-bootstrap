@@ -1,39 +1,63 @@
-# Tyk-K8S-bootstrap
+# Tyk-K8S-Bootstrap
 
-This is a standalone app meant to help with bootstrap and deletion of the tyk-stack when installed
-via tyk-helm-charts.
-
-**Note:** 
-<br>This app is needed only for Tyk [Self-managed](https://tyk.io/docs/tyk-on-premises/) deployment!
-<br>[Tyk OSS](https://tyk.io/docs/apim/open-source/) doesn't have a special bootstrap and in [Tyk Cloud](https://tyk.io/docs/tyk-cloud/) it is done for you (being a SaaS).
+Tyk K8s Bootstrap comes with three applications to bootstrap [`tyk-stack`](https://github.com/TykTechnologies/tyk-charts/tree/main/tyk-stack) 
+and to create Kubernetes secrets that can be utilized in [Tyk Operator](https://tyk.io/docs/tyk-operator/) and 
+[`tyk-dev-portal`](https://github.com/TykTechnologies/tyk-charts/tree/main/components/tyk-dev-portal) chart.
 
 ## What it does?
 
-### 1. Tyk post deployment bootstrapping
-a. Creates a basic organization with the values specified in the env vars
-via the tyk-helm charts
-<br>
-b. Creates a user to access the dashboard (values determined as above)
-<br>
-c. Bootstraps tyk-portal with a mock page (only if enabled in tyk-helm-charts)
-<br>
-d. Creates the secret required for the tyk-operator to work (only if enabled in tyk-helm-charts)
+`tyk-k8s-bootstrap` offers three applications functioning as [Chart Hooks](https://helm.sh/docs/topics/charts_hooks/) in Helm charts.
 
+- `bootstrap-pre-install` is a binary functioning as a `pre-install` hook, validating the Tyk Dashboard License key.
+- `bootstrap-post-install` is a binary functioning as a `post-install` hook, bootstrapping the Tyk Dashboard by 
+setting up an organization and an admin user. Additionally, it generates Kubernetes secrets utilized by 
+[Tyk Operator](https://tyk.io/docs/tyk-operator/) and [Tyk Enterprise Portal](https://tyk.io/docs/tyk-stack/tyk-developer-portal/enterprise-developer-portal/install-tyk-enterprise-portal/)
+- `bootstrap-pre-delete` is a binary functioning as a `pre-delete` hook, responsible for system cleanup.
 
+## Environment Variables
 
-### 2. Tyk pre deletion hook
-a. Ensures that no failed jobs are still running by deleting them (as they prevented
-<br>
-b. clean uninstallation of the helm charts)
-<br>
-c. Also detects and deletes an existing tyk-operator-secret on helm charts uninstallation
+| Environment Variable                           | Description                                                                                                                                                                                                           |
+|------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| TYK_K8SBOOTSTRAP_INSECURESKIPVERIFY            | enables InsecureSkipVerify options in HTTP requests sent to Tyk -<br/> might be useful for Tyk Dashboard with self-signed certs                                                                                       |
+| TYK_K8SBOOTSTRAP_BOOTSTRAPDASHBOARD            | controls bootstrapping Tyk Dashboard or not.                                                                                                                                                                          |
+| TYK_K8SBOOTSTRAP_BOOTSTRAPPORTAL               | controls bootstrapping Tyk Classic Portal or not.                                                                                                                                                                     |
+| TYK_K8SBOOTSTRAP_OPERATORKUBERNETESSECRETNAME  | corresponds to the Kubernetes secret name that will be created for Tyk Operator.<br/> Set it to an empty to string to disable bootstrapping Kubernetes secret for Tyk Operator.                                       |
+| TYK_K8SBOOTSTRAP_DEVPORTALKUBERNETESSECRETNAME | corresponds to the Kubernetes secret name that will be created for Tyk Developer Enterprise Portal.<br/> Set it to an empty to string to disable bootstrapping Kubernetes secret for Tyk Developer Enterprise Portal. |
+| TYK_K8SBOOTSTRAP_K8S_DASHBOARDSVCURL           | corresponds to the URL of Tyk Dashboard.                                                                                                                                                                              |
+| TYK_K8SBOOTSTRAP_K8S_DASHBOARDSVCPROTO         | corresponds to Tyk Dashboard Service Protocol (either http or https). By default, it is http.                                                                                                                         |
+| TYK_K8SBOOTSTRAP_K8S_RELEASENAMESPACE          | corresponds to the namespace where Tyk is deployed via Helm Chart.                                                                                                                                                    |
+| TYK_K8SBOOTSTRAP_K8S_DASHBOARDDEPLOYMENTNAME   | corresponds to the name of the Tyk Dashboard Deployment, which is being used to restart<br/> Dashboard pod after bootstrapping.                                                                                       |
+| TYK_K8SBOOTSTRAP_TYK_ADMIN_SECRET              | corresponds to the secret that will be used in Admin APIs.                                                                                                                                                            |
+| TYK_K8SBOOTSTRAP_TYK_ADMIN_FIRSTNAME           | corresponds to the first name of the admin being created.                                                                                                                                                             |
+| TYK_K8SBOOTSTRAP_TYK_ADMIN_LASTNAME            | corresponds to the last name of the admin being created.                                                                                                                                                              |
+| TYK_K8SBOOTSTRAP_TYK_ADMIN_EMAILADDRESS        | corresponds to the email address of the admin being created.                                                                                                                                                          |
+| TYK_K8SBOOTSTRAP_TYK_ADMIN_PASSWORD            | corresponds to the password of the admin being created.                                                                                                                                                               |
+| TYK_K8SBOOTSTRAP_TYK_ADMIN_AUTH                | corresponds to Tyk Dashboard API Access Credentials of the admin user, and it will be used in Authorization <br/>header of the HTTP requests that will be sent to Tyk for bootstrapping.                              |
+| TYK_K8SBOOTSTRAP_TYK_ORG_NAME                  | corresponds to the name for your organization that is going to be bootstrapped in Tyk.                                                                                                                                |
+| TYK_K8SBOOTSTRAP_TYK_ORG_CNAME                 | corresponds to the Organisation CNAME which is going to bind the Portal to.                                                                                                                                           |
+| TYK_K8SBOOTSTRAP_TYK_ORG_ID                    | corresponds to the organisation ID that is being created.                                                                                                                                                             |
+| TYK_K8SBOOTSTRAP_TYK_DASHBOARDLICENSE          | corresponds to the license key of Tyk Dashboard.                                                                                                                                                                      |
 
-Required RBAC roles for the app to work inside the k8s cluster:
-- delete
-- list
+## Required RBAC roles for the app to work inside the Kubernetes cluster
 
+Given that the applications operate as Chart Hooks to execute specific actions, such as creating Kubernetes Secrets, 
+validating component health statuses, and performing system cleanup during the deletion of the Helm Release, 
+they require specific RBAC rules for each operation.
 
-### Useful debug/test tips/commands:
+The required roles can be found here: 
+[`bootstrap-role.yaml`](https://github.com/TykTechnologies/tyk-charts/blob/main/components/tyk-bootstrap/templates/bootstrap-role.yml)
+
+## Useful testing tips and commands:
+
+### Load images to Kind Cluster
+
+After making your changes to applications, running the following command loads your local changes into KinD cluster with `tykio/tyk-k8s-boostrap{pre-post}-{delete-install}:testing` image.
+
+```bash
+$ ./hack/load_images.sh
+```
+
+### KinD with a local image repository
 
 If you want to create a k8s kind cluster that also has a local repository where
 you can push the images generated by the Makefile just run the "local_registry.sh" script.

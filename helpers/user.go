@@ -12,9 +12,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 )
 
-func CreateUser(client http.Client, dashboardUrl string, orgId string) (string, error) {
+func CreateUser(client http.Client, dashboardUrl, orgId string) (string, error) {
 	userData, err := GetUserData(client, dashboardUrl, orgId)
-
 	if err != nil {
 		return "", err
 	}
@@ -23,6 +22,7 @@ func CreateUser(client http.Client, dashboardUrl string, orgId string) (string, 
 	if err != nil {
 		return "", err
 	}
+
 	return userData.AuthCode, nil
 }
 
@@ -31,46 +31,54 @@ type ResetPasswordStruct struct {
 	UserPermissions map[string]string `json:"user_permissions"`
 }
 
-func SetUserPassword(client http.Client, userId string, authCode string, dashboardUrl string) error {
+func SetUserPassword(client http.Client, userId, authCode, dashboardUrl string) error {
 	newPasswordData := ResetPasswordStruct{
-		NewPassword:     data.AppConfig.TykAdminPassword,
+		NewPassword:     data.BootstrapConf.Tyk.Admin.Password,
 		UserPermissions: map[string]string{"IsAdmin": "admin"},
 	}
+
 	reqBody, err := json.Marshal(newPasswordData)
 	if err != nil {
 		return err
 	}
 
-	req, _ := http.NewRequest(
-		"POST",
+	req, err := http.NewRequest(
+		http.MethodPost,
 		fmt.Sprintf(ApiUsersActionsResetEndpoint, dashboardUrl, userId),
 		bytes.NewReader(reqBody))
-	req.Header.Set("authorization", authCode)
-	req.Header.Set("Content-Type", "application/json")
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set(data.AuthorizationHeader, authCode)
+	req.Header.Set(data.ContentTypeHeader, "application/json")
+
 	res, err := client.Do(req)
 	if err != nil {
 		return err
 	}
+
 	if res.StatusCode != 200 {
 		return errors.New("resetting password did not work")
 	}
+
 	return nil
 }
 
 func GenerateDashboardCredentials(client http.Client) error {
-	orgId, err := CreateOrganisation(client, data.AppConfig.DashboardUrl)
+	orgId, err := CreateOrganisation(client, data.BootstrapConf.K8s.DashboardSvcUrl)
 	if err != nil {
 		return err
 	}
 
-	data.AppConfig.OrgId = orgId
+	data.BootstrapConf.Tyk.Org.ID = orgId
 
-	userAuth, err := CreateUser(client, data.AppConfig.DashboardUrl, orgId)
+	userAuth, err := CreateUser(client, data.BootstrapConf.K8s.DashboardSvcUrl, orgId)
 	if err != nil {
 		return err
 	}
 
-	data.AppConfig.UserAuth = userAuth
+	data.BootstrapConf.Tyk.Admin.Auth = userAuth
 
 	return nil
 }
@@ -88,15 +96,14 @@ type CreateUserResponse struct {
 	Status  string `json:"Status"`
 	Message string `json:"Message"`
 	Meta    struct {
-		APIModel struct {
-		} `json:"api_model"`
-		FirstName       string `json:"first_name"`
-		LastName        string `json:"last_name"`
-		EmailAddress    string `json:"email_address"`
-		OrgID           string `json:"org_id"`
-		Active          bool   `json:"active"`
-		ID              string `json:"id"`
-		AccessKey       string `json:"access_key"`
+		APIModel        struct{} `json:"api_model"`
+		FirstName       string   `json:"first_name"`
+		LastName        string   `json:"last_name"`
+		EmailAddress    string   `json:"email_address"`
+		OrgID           string   `json:"org_id"`
+		Active          bool     `json:"active"`
+		ID              string   `json:"id"`
+		AccessKey       string   `json:"access_key"`
 		UserPermissions struct {
 			IsAdmin string `json:"IsAdmin"`
 		} `json:"user_permissions"`
@@ -113,27 +120,29 @@ type NeededUserData struct {
 	UserId   string
 }
 
-func GetUserData(client http.Client, dashboardUrl string, orgId string) (NeededUserData, error) {
+func GetUserData(client http.Client, dashboardUrl, orgId string) (NeededUserData, error) {
 	reqBody := CreateUserRequest{
 		OrganisationId:  orgId,
-		FirstName:       data.AppConfig.TykAdminFirstName,
-		LastName:        data.AppConfig.TykAdminLastName,
-		EmailAddress:    data.AppConfig.TykAdminEmailAddress,
+		FirstName:       data.BootstrapConf.Tyk.Admin.FirstName,
+		LastName:        data.BootstrapConf.Tyk.Admin.LastName,
+		EmailAddress:    data.BootstrapConf.Tyk.Admin.EmailAddress,
 		Active:          true,
 		UserPermissions: map[string]string{"IsAdmin": "admin"},
 	}
+
 	reqBytes, err := json.Marshal(reqBody)
 	if err != nil {
 		return NeededUserData{}, err
 	}
-	reqData := bytes.NewReader(reqBytes)
-	req, err := http.NewRequest("POST", dashboardUrl+"/admin/users", reqData)
+
+	req, err := http.NewRequest(http.MethodPost, dashboardUrl+"/admin/users", bytes.NewReader(reqBytes))
 	if err != nil {
 		return NeededUserData{}, err
 	}
 
-	req.Header.Set("admin-auth", data.AppConfig.TykAdminSecret)
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(data.AdminAuthHeader, data.BootstrapConf.Tyk.Admin.Secret)
+	req.Header.Set(data.ContentTypeHeader, "application/json")
+
 	res, err := client.Do(req)
 	if err != nil {
 		return NeededUserData{}, err
@@ -145,6 +154,7 @@ func GetUserData(client http.Client, dashboardUrl string, orgId string) (NeededU
 	}
 
 	getUserResponse := CreateUserResponse{}
+
 	err = json.Unmarshal(bodyBytes, &getUserResponse)
 	if err != nil {
 		return NeededUserData{}, err

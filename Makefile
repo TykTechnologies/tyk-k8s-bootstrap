@@ -27,3 +27,9 @@ build-bootstrap-pre-delete:
 		"-X main.version=$(MAIN_VERSION)" "$(BOOTSTRAP_CMD_PREDELETE_PATH)"
 
 build-all: build-bootstrap-post build-bootstrap-pre-delete build-bootstrap-pre-install
+
+linters:
+	go fmt ./...
+	gofmt -s -w .
+	go vet ./...
+	golangci-lint run
