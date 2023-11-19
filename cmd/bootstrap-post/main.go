@@ -85,7 +85,7 @@ func main() {
 	}
 
 	// Common log message for organization existence
-	if orgExists && (conf.DevPortalKubernetesSecretName != "" || conf.OperatorKubernetesSecretName) != "" {
+	if orgExists && (conf.DevPortalKubernetesSecretName != "" || conf.OperatorKubernetesSecretName != "") {
 		log.WithFields(logrus.Fields{
 			"organisationName":  conf.Tyk.Org.Name,
 			"organisationCName": conf.Tyk.Org.Cname,
@@ -95,7 +95,7 @@ func main() {
 
 	if conf.DevPortalKubernetesSecretName != "" {
 		err = createK8sSecret(
-			log, *conf, k8sClient, conf.DevPortalKubernetesSecretName, "Tyk Developer Portal",
+			log, conf, k8sClient, conf.DevPortalKubernetesSecretName, "Tyk Developer Portal",
 		)
 		if err != nil {
 			exit(log, err)
@@ -103,14 +103,14 @@ func main() {
 	}
 
 	if conf.OperatorKubernetesSecretName != "" {
-		err = createK8sSecret(log, *conf, k8sClient, conf.OperatorKubernetesSecretName, "Tyk Operator")
+		err = createK8sSecret(log, conf, k8sClient, conf.OperatorKubernetesSecretName, "Tyk Operator")
 		if err != nil {
 			exit(log, err)
 		}
 	}
 }
 
-func createK8sSecret(l *logrus.Logger, c config.Config, client *k8s.Client, secretName, secretType string) error {
+func createK8sSecret(l *logrus.Logger, c *config.Config, client *k8s.Client, secretName, secretType string) error {
 	fields := logrus.Fields{"secretName": secretName}
 
 	if c.Tyk.Org.ID == "" {
