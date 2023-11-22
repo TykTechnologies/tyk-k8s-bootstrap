@@ -44,7 +44,7 @@ func main() {
 		exit(log, err)
 	}
 
-	if conf.BootstrapDashboard {
+	if conf.BootstrapDashboard || conf.OperatorKubernetesSecretName != "" || conf.DevPortalKubernetesSecretName != "" {
 		conf.K8s.DashboardSvcUrl, err = k8sClient.DiscoverDashboardSvc()
 		if err != nil {
 			exit(log, err)
@@ -52,35 +52,34 @@ func main() {
 	}
 
 	tykSvc := tyk.NewClient(conf, log.WithField("Client", "Tyk"))
+	var orgExists bool
 
-	orgExists, err := tykSvc.OrgExists()
-	if err != nil {
-		exit(log, err)
-	}
-
-	if !orgExists {
-		if conf.BootstrapDashboard {
-			log.Info("Bootstrapping Tyk Dashboard")
-
-			if err = tykSvc.CreateOrganisation(); err != nil {
-				exit(log, err)
-			}
-
-			if err = tykSvc.CreateAdmin(); err != nil {
-				exit(log, err)
-			}
+	if conf.BootstrapDashboard {
+		orgExists, err = tykSvc.OrgExists()
+		if err != nil {
+			exit(log, err)
 		}
 
-		if conf.BootstrapPortal {
-			log.Info("Bootstrapping Tyk Classic Portal")
+		log.Info("Bootstrapping Tyk Dashboard")
 
-			if err = tykSvc.BootstrapClassicPortal(); err != nil {
-				exit(log, err)
-			}
+		if err = tykSvc.CreateOrganisation(); err != nil {
+			exit(log, err)
+		}
 
-			if err = k8sClient.RestartDashboard(); err != nil {
-				exit(log, err)
-			}
+		if err = tykSvc.CreateAdmin(); err != nil {
+			exit(log, err)
+		}
+	}
+
+	if conf.BootstrapPortal {
+		log.Info("Bootstrapping Tyk Classic Portal")
+
+		if err = tykSvc.BootstrapClassicPortal(); err != nil {
+			exit(log, err)
+		}
+
+		if err = k8sClient.RestartDashboard(); err != nil {
+			exit(log, err)
 		}
 	}
 
