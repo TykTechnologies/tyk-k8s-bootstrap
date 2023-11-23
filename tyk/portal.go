@@ -17,6 +17,8 @@ func (s *Service) BootstrapClassicPortal() error {
 	if s.appArgs.Tyk.Admin.Auth == "" {
 		s.l.Warn("Missing Admin Auth configuration may cause Authorization failures on Tyk",
 			"If Tyk Dashboard bootstrapping is disabled, please provide Admin Auth through environment variables")
+
+		return errors.New("failed to bootstrap classic portal; missing Tyk Admin Auth")
 	}
 
 	err := s.createPortalDefaultSettings()
