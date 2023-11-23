@@ -1,4 +1,4 @@
-package license
+package pkg
 
 import (
 	"errors"
@@ -10,6 +10,8 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
+// ValidateDashboardLicense validates if the given license argument is a valid and not expired
+// JWT token.
 func ValidateDashboardLicense(license string) (bool, error) {
 	if license == "" {
 		return false, fmt.Errorf("empty license")

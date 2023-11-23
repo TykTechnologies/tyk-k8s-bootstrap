@@ -18,6 +18,7 @@ setting up an organization and an admin user. Additionally, it generates Kuberne
 
 | Environment Variable                           | Description                                                                                                                                                                                                           |
 |------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| TYK_K8SBOOTSTRAP_LOG                           | sets the level of the logrus logger. The default is `info`                                                                                                                                                            |
 | TYK_K8SBOOTSTRAP_INSECURESKIPVERIFY            | enables InsecureSkipVerify options in HTTP requests sent to Tyk -<br/> might be useful for Tyk Dashboard with self-signed certs                                                                                       |
 | TYK_K8SBOOTSTRAP_BOOTSTRAPDASHBOARD            | controls bootstrapping Tyk Dashboard or not.                                                                                                                                                                          |
 | TYK_K8SBOOTSTRAP_BOOTSTRAPPORTAL               | controls bootstrapping Tyk Classic Portal or not.                                                                                                                                                                     |
@@ -37,6 +38,23 @@ setting up an organization and an admin user. Additionally, it generates Kuberne
 | TYK_K8SBOOTSTRAP_TYK_ORG_CNAME                 | corresponds to the Organisation CNAME which is going to bind the Portal to.                                                                                                                                           |
 | TYK_K8SBOOTSTRAP_TYK_ORG_ID                    | corresponds to the organisation ID that is being created.                                                                                                                                                             |
 | TYK_K8SBOOTSTRAP_TYK_DASHBOARDLICENSE          | corresponds to the license key of Tyk Dashboard.                                                                                                                                                                      |
+
+## Bootstrapped Environments
+
+
+If Tyk is already bootstrapped, the application will bypass the creation of the Tyk Organization and Admin User,
+proceeding directly with the creation of Kubernetes Secrets.
+
+Given that the Kubernetes Secrets require values for `TYK_AUTH` and `TYK_ORG`, it is essential to provide these values 
+through the respective environment variables, called `TYK_K8SBOOTSTRAP_TYK_ADMIN_AUTH` for `TYK_AUTH` and 
+`TYK_K8SBOOTSTRAP_TYK_ORG_ID` for `TYK_ORG`. 
+
+Ensure that these environment variables are set appropriately.
+
+> [!WARNING]
+> If these values are not provided, `TYK_AUTH` and `TYK_ORG` values in Kubernetes secrets will be empty string. You may
+> need to update the secret later to populate these values.
+
 
 ## Required RBAC roles for the app to work inside the Kubernetes cluster
 

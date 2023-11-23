@@ -3,22 +3,47 @@ package main
 import (
 	"fmt"
 	"os"
-	"tyk/tyk/bootstrap/data"
-	"tyk/tyk/bootstrap/preinstallation"
+	"tyk/tyk/bootstrap/pkg"
+	"tyk/tyk/bootstrap/pkg/config"
+
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
-	err := data.InitBootstrapConf()
+	log := logrus.New()
+
+	conf, err := config.NewConfig()
 	if err != nil {
-		fmt.Printf("Failed to parse bootstrap environment variables, err: %v", err)
-		os.Exit(1)
+		exit(log, err)
 	}
 
-	err = preinstallation.PreHookInstall()
+	level, err := logrus.ParseLevel(conf.Log)
 	if err != nil {
-		fmt.Printf("Failed to run pre-hook job, err: %v", err)
-		os.Exit(1)
+		log.Infof(
+			"Failed to parse log level %v, continuing with the default log level Info, err %v", conf.Log, err,
+		)
+
+		level = logrus.InfoLevel
 	}
 
-	fmt.Println("Pre-Hook bootstrapping succeeded, the provided license is valid!")
+	log.SetLevel(level)
+	log.WithField("level", level.String()).Debug("Set the log level")
+
+	licenseIsValid, err := pkg.ValidateDashboardLicense(conf.Tyk.DashboardLicense)
+	if err != nil {
+		exit(log, err)
+	}
+
+	if !licenseIsValid {
+		exit(log, fmt.Errorf("provided license is invalid"))
+	}
+
+	log.Info("Pre-install Hook bootstrapping succeeded, the provided license is valid!")
+}
+
+func exit(log *logrus.Logger, err error) {
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
 }

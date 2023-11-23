@@ -1,80 +1,153 @@
 package main
 
 import (
-	"crypto/tls"
-	"fmt"
-	"net/http"
 	"os"
-	"tyk/tyk/bootstrap/data"
-	"tyk/tyk/bootstrap/helpers"
-	"tyk/tyk/bootstrap/readiness"
+	"strings"
+	"tyk/tyk/bootstrap/k8s"
+	"tyk/tyk/bootstrap/pkg/config"
+	"tyk/tyk/bootstrap/tyk"
+
+	"github.com/sirupsen/logrus"
+)
+
+const (
+	secretTypeOperator = "Operator"
+	secretTypePortal   = "Portal"
 )
 
 func main() {
-	err := data.InitPostInstall()
+	log := logrus.New()
+
+	conf, err := config.NewConfig()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		exit(log, err)
 	}
 
-	err = readiness.CheckIfRequiredDeploymentsAreReady()
+	level, err := logrus.ParseLevel(conf.Log)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Infof(
+			"Failed to parse log level %v, continuing with the default log level Info, err %v", conf.Log, err,
+		)
+
+		level = logrus.InfoLevel
 	}
 
-	tp := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: data.BootstrapConf.InsecureSkipVerify},
-	}
-	client := http.Client{Transport: tp}
+	log.SetLevel(level)
+	log.WithField("level", level.String()).Info("Set the log level")
 
-	fmt.Println("Started creating dashboard org")
-
-	err = helpers.CheckForExistingOrganisation(client)
+	k8sClient, err := k8s.NewClient(conf, log.WithField("Client", "Kubernetes"))
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		exit(log, err)
 	}
 
-	fmt.Println("Finished creating dashboard org")
-	fmt.Println("Generating dashboard credentials")
-
-	err = helpers.GenerateDashboardCredentials(client)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	if err = k8sClient.CheckIfRequiredDeploymentsAreReady(); err != nil {
+		exit(log, err)
 	}
 
-	fmt.Println("Finished generating dashboard credentials")
-	fmt.Println("Started bootstrapping operator secret")
-
-	if data.BootstrapConf.OperatorKubernetesSecretName != "" {
-		err = helpers.BootstrapTykOperatorSecret()
+	if conf.BootstrapDashboard || conf.OperatorKubernetesSecretName != "" || conf.DevPortalKubernetesSecretName != "" {
+		conf.K8s.DashboardSvcUrl, err = k8sClient.DiscoverDashboardSvc()
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			exit(log, err)
 		}
 	}
 
-	fmt.Println("Finished bootstrapping operator secret\nStarted bootstrapping portal secret")
+	tykSvc := tyk.NewClient(conf, log.WithField("Client", "Tyk"))
+	var orgExists bool
 
-	if data.BootstrapConf.DevPortalKubernetesSecretName != "" {
-		err = helpers.BootstrapTykPortalSecret()
+	if conf.BootstrapDashboard {
+		orgExists, err = tykSvc.OrgExists()
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			exit(log, err)
+		}
+
+		if orgExists {
+			log.Warnf("Organisation named %v with cname %v exists on Tyk Dashboard",
+				conf.Tyk.Org.Name,
+				conf.Tyk.Org.Cname,
+			)
+		} else {
+			log.Info("Bootstrapping Tyk Dashboard")
+
+			if err = tykSvc.CreateOrganisation(); err != nil {
+				exit(log, err)
+			}
+
+			if err = tykSvc.CreateAdmin(); err != nil {
+				exit(log, err)
+			}
 		}
 	}
 
-	fmt.Println("Started bootstrapping portal with requests to dashboard")
+	if conf.BootstrapPortal {
+		log.Info("Bootstrapping Tyk Classic Portal")
 
-	if data.BootstrapConf.BootstrapPortal {
-		err = helpers.BoostrapPortal(client)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+		if err = tykSvc.BootstrapClassicPortal(); err != nil {
+			exit(log, err)
+		}
+
+		if err = k8sClient.RestartDashboard(); err != nil {
+			exit(log, err)
 		}
 	}
 
-	fmt.Println("Finished bootstrapping portal")
+	// Common log message for organization existence
+	if orgExists && (conf.DevPortalKubernetesSecretName != "" || conf.OperatorKubernetesSecretName != "") {
+		log.WithFields(logrus.Fields{
+			"organisationName":  conf.Tyk.Org.Name,
+			"organisationCName": conf.Tyk.Org.Cname,
+		}).Info("Organisation exists on Tyk. " +
+			"Please provide the Organisation ID and Dashboard Access Key for Kubernetes secrets")
+	}
+
+	if conf.DevPortalKubernetesSecretName != "" {
+		err = createK8sSecret(
+			log, conf, k8sClient, conf.DevPortalKubernetesSecretName, "Tyk Developer Portal",
+		)
+		if err != nil {
+			exit(log, err)
+		}
+	}
+
+	if conf.OperatorKubernetesSecretName != "" {
+		err = createK8sSecret(log, conf, k8sClient, conf.OperatorKubernetesSecretName, "Tyk Operator")
+		if err != nil {
+			exit(log, err)
+		}
+	}
+}
+
+func createK8sSecret(l *logrus.Logger, c *config.Config, client *k8s.Client, secretName, secretType string) error {
+	fields := logrus.Fields{"secretName": secretName}
+
+	if c.Tyk.Org.ID == "" {
+		l.WithFields(fields).
+			Warn("Given Organisation ID is empty, the Kubernetes secret will contain empty TYK_ORG")
+	}
+
+	if c.Tyk.Admin.Auth == "" {
+		l.WithFields(fields).
+			Warn("Given User Auth key is empty, the Kubernetes secret will contain empty TYK_AUTH")
+	}
+
+	l.WithFields(fields).Infof("Creating Kubernetes Secret for %s", secretType)
+
+	switch {
+	case strings.Contains(secretType, secretTypeOperator):
+		if err := client.BootstrapTykOperatorSecret(); err != nil {
+			return err
+		}
+	case strings.Contains(secretType, secretTypePortal):
+		if err := client.BootstrapTykPortalSecret(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func exit(log *logrus.Logger, err error) {
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
 }

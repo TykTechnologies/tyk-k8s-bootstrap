@@ -1,32 +1,19 @@
-package readiness
+package k8s
 
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
-	"tyk/tyk/bootstrap/data"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
-func CheckIfRequiredDeploymentsAreReady() error {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return err
-	}
-
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return err
-	}
-
+// CheckIfRequiredDeploymentsAreReady checks if the required Deployments are ready to be bootstrapped
+// or not. At the moment, it checks for Redis and Tyk Dashboard pods to be ready.
+func (c *Client) CheckIfRequiredDeploymentsAreReady() error {
 	time.Sleep(5 * time.Second)
-
 	var attemptCount int
 
 	for {
@@ -35,13 +22,15 @@ func CheckIfRequiredDeploymentsAreReady() error {
 			return errors.New("attempted readiness check too many times")
 		}
 
-		pods, err := clientset.CoreV1().Pods(data.BootstrapConf.K8s.ReleaseNamespace).
+		pods, err := c.clientSet.
+			CoreV1().
+			Pods(c.appArgs.K8s.ReleaseNamespace).
 			List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("There are %d other pods in the cluster\n", len(pods.Items)-1)
+		c.l.Infof("There are %d other pods in the cluster", len(pods.Items)-1)
 
 		var requiredPods []v1.Pod
 
@@ -67,13 +56,12 @@ func CheckIfRequiredDeploymentsAreReady() error {
 		}
 
 		if len(notReadyPods) == 0 {
+			c.l.Info("All Pods are ready")
 			return nil
 		}
 
-		fmt.Printf("The following pods have containers that are NOT ready: ")
-
 		for podName := range notReadyPods {
-			fmt.Println(podName)
+			c.l.Infof("Pod: %v has containers that are NOT ready", podName)
 		}
 
 		time.Sleep(2 * time.Second)
