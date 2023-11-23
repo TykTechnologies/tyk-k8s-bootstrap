@@ -60,6 +60,13 @@ func main() {
 			exit(log, err)
 		}
 
+		if orgExists {
+			log.Warnf("Organisation named %v with cname %v exists on Tyk Dashboard",
+				conf.Tyk.Org.Name,
+				conf.Tyk.Org.Cname,
+			)
+		}
+
 		log.Info("Bootstrapping Tyk Dashboard")
 
 		if err = tykSvc.CreateOrganisation(); err != nil {
