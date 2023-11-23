@@ -81,12 +81,19 @@ func main() {
 	if conf.BootstrapPortal {
 		log.Info("Bootstrapping Tyk Classic Portal")
 
-		if err = tykSvc.BootstrapClassicPortal(); err != nil {
+		orgExists, err = tykSvc.OrgExists()
+		if err != nil {
 			exit(log, err)
 		}
 
-		if err = k8sClient.RestartDashboard(); err != nil {
-			exit(log, err)
+		if !orgExists {
+			if err = tykSvc.BootstrapClassicPortal(); err != nil {
+				exit(log, err)
+			}
+
+			if err = k8sClient.RestartDashboard(); err != nil {
+				exit(log, err)
+			}
 		}
 	}
 
