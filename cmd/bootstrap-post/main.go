@@ -65,16 +65,16 @@ func main() {
 				conf.Tyk.Org.Name,
 				conf.Tyk.Org.Cname,
 			)
-		}
+		} else {
+			log.Info("Bootstrapping Tyk Dashboard")
 
-		log.Info("Bootstrapping Tyk Dashboard")
+			if err = tykSvc.CreateOrganisation(); err != nil {
+				exit(log, err)
+			}
 
-		if err = tykSvc.CreateOrganisation(); err != nil {
-			exit(log, err)
-		}
-
-		if err = tykSvc.CreateAdmin(); err != nil {
-			exit(log, err)
+			if err = tykSvc.CreateAdmin(); err != nil {
+				exit(log, err)
+			}
 		}
 	}
 
