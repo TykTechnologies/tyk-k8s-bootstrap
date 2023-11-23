@@ -14,6 +14,11 @@ import (
 
 // BootstrapClassicPortal bootstraps Tyk Classic Portal.
 func (s *Service) BootstrapClassicPortal() error {
+	if s.appArgs.Tyk.Admin.Auth == "" {
+		s.l.Warn("Missing Admin Auth configuration may cause Authorization failures on Tyk",
+			"If Tyk Dashboard bootstrapping is disabled, please provide Admin Auth through environment variables")
+	}
+
 	err := s.createPortalDefaultSettings()
 	if err != nil {
 		return err
@@ -39,6 +44,11 @@ func (s *Service) BootstrapClassicPortal() error {
 
 func (s *Service) setPortalCname() error {
 	s.l.Debug("Setting portal cname")
+
+	if s.appArgs.Tyk.Org.Cname == "" {
+		s.l.Warn("Missing Organisation Cname configuration may cause failures on Tyk requests",
+			"Please provide Org Cname")
+	}
 
 	cnameReq := api.CnameReq{Cname: s.appArgs.Tyk.Org.Cname}
 
@@ -74,6 +84,11 @@ func (s *Service) setPortalCname() error {
 
 func (s *Service) initialiseCatalogue() error {
 	s.l.Debug("Initialising Catalogue")
+
+	if s.appArgs.Tyk.Org.ID == "" {
+		s.l.Warn("Missing Organisation ID configuration may cause failures on Tyk requests",
+			"Please provide Org ID")
+	}
 
 	initCatalog := api.InitCatalogReq{OrgId: s.appArgs.Tyk.Org.ID}
 
