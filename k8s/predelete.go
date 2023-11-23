@@ -12,12 +12,16 @@ import (
 func (c *Client) ExecutePreDeleteOperations() error {
 	c.l.Info("Running pre delete hook")
 
-	if err := c.deleteSecret(c.appArgs.OperatorKubernetesSecretName, true); err != nil {
-		return err
+	if c.appArgs.OperatorKubernetesSecretName != "" {
+		if err := c.deleteSecret(c.appArgs.OperatorKubernetesSecretName, true); err != nil {
+			return err
+		}
 	}
 
-	if err := c.deleteSecret(c.appArgs.DevPortalKubernetesSecretName, true); err != nil {
-		return err
+	if c.appArgs.DevPortalKubernetesSecretName != "" {
+		if err := c.deleteSecret(c.appArgs.DevPortalKubernetesSecretName, true); err != nil {
+			return err
+		}
 	}
 
 	if err := c.deleteBootstrappingJobs(); err != nil {
