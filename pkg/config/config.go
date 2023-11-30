@@ -73,7 +73,7 @@ type TykOrg struct {
 	Cname string
 
 	// ID corresponds to the organisation ID that is being created.
-	ID string `ignored:"true"`
+	ID string
 }
 
 type TykConf struct {
