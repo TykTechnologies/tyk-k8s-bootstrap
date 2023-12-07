@@ -97,7 +97,7 @@ func (c *Client) DiscoverDashboardSvc() (string, error) {
 		c.l.Warnf("Found multiple open ports in svc/%v/%v", service.Name, service.Namespace)
 	}
 
-	c.appArgs.K8s.DashboardSvcUrl = fmt.Sprintf("%s://%s.%s.svc.cluster.local:%d",
+	c.appArgs.K8s.DashboardSvcUrl = fmt.Sprintf("%s://%s.%s.svc:%d",
 		c.appArgs.K8s.DashboardSvcProto,
 		service.Name,
 		c.appArgs.K8s.ReleaseNamespace,
