@@ -97,8 +97,8 @@ type HybridConf struct {
 	// KeyEvent corresponds to `key_event` of the event options which enables key events such as updates and deletes,
 	// to be propagated to the various instance zones.
 	KeyEvent *api.EventConfig
-	// HashedKeyEvent corresponds to `hashed_key_event` of the event options which enables key events such as updates and deletes,
-	// to be propagated to the various instance zones.
+	// HashedKeyEvent corresponds to `hashed_key_event` of the event options which enables key events such as updates
+	// and deletes, to be propagated to the various instance zones.
 	HashedKeyEvent *api.EventConfig
 }
 
