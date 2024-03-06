@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/kelseyhightower/envconfig"
 	"tyk/tyk/bootstrap/tyk/api"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
 const prefix = "TYK_K8SBOOTSTRAP"
