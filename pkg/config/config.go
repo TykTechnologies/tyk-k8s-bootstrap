@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/kelseyhightower/envconfig"
+	"tyk/tyk/bootstrap/tyk/api"
 )
 
 const prefix = "TYK_K8SBOOTSTRAP"
@@ -84,6 +85,20 @@ type TykConf struct {
 
 	// DashboardLicense corresponds to the license key of Tyk Dashboard.
 	DashboardLicense string
+
+	// Hybrid includes details of hybrid organisation while using MDCB Control Plane
+	Hybrid HybridConf
+}
+
+type HybridConf struct {
+	// Enabled specified if the Hybrid organisation is enabled or not
+	Enabled bool
+	// KeyEvent corresponds to `key_event` of the event options which enables key events such as updates and deletes,
+	// to be propagated to the various instance zones.
+	KeyEvent *api.EventConfig
+	// HashedKeyEvent corresponds to `hashed_key_event` of the event options which enables key events such as updates and deletes,
+	// to be propagated to the various instance zones.
+	HashedKeyEvent *api.EventConfig
 }
 
 func NewConfig() (*Config, error) {

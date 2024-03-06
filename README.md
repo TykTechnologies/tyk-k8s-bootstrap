@@ -38,6 +38,9 @@ setting up an organization and an admin user. Additionally, it generates Kuberne
 | TYK_K8SBOOTSTRAP_TYK_ORG_CNAME                 | corresponds to the Organisation CNAME which is going to bind the Portal to.                                                                                                                                           |
 | TYK_K8SBOOTSTRAP_TYK_ORG_ID                    | corresponds to the organisation ID that is being created.                                                                                                                                                             |
 | TYK_K8SBOOTSTRAP_TYK_DASHBOARDLICENSE          | corresponds to the license key of Tyk Dashboard.                                                                                                                                                                      |
+| TYK_K8SBOOTSTRAP_TYK_HYBRID_ENABLED            | specifies if the Hybrid organisation for MDCB Control Plane is enabled or not                                                                                                                                         |
+| TYK_K8SBOOTSTRAP_TYK_HYBRID_KEYEVENT           | corresponds to `key_event` of the event options (optional).                                                                                                                                                           |
+| TYK_K8SBOOTSTRAP_TYK_HYBRID_HASHEDKEYEVENT     | corresponds to `hashed_key_event` of the event options (optional).                                                                                                                                                    |
 
 ## Bootstrapped Environments
 

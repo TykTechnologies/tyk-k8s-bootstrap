@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"net/http"
+	"tyk/tyk/bootstrap/pkg/config"
 	"tyk/tyk/bootstrap/tyk/api"
 	"tyk/tyk/bootstrap/tyk/internal/constants"
 
@@ -79,6 +80,13 @@ func (s *Service) CreateOrganisation() error {
 		Cname:        s.appArgs.Tyk.Org.Cname,
 	}
 
+	// Enable hybrid in the organisation while setting up the MDCB Control Plane.
+	// For reference: https://tyk.io/docs/tyk-multi-data-centre/setup-controller-data-centre/
+	if s.appArgs.Tyk.Hybrid.Enabled {
+		createOrgData.HybridEnabled = true
+		createOrgData.EventOptions = eventOptions(s.appArgs.Tyk.Hybrid, s.appArgs.Tyk.Admin.EmailAddress)
+	}
+
 	reqBodyBytes, err := json.Marshal(createOrgData)
 	if err != nil {
 		return err
@@ -120,4 +128,27 @@ func (s *Service) CreateOrganisation() error {
 	}).Debug("Created Organisation successfully")
 
 	return nil
+}
+
+func eventOptions(hconf config.HybridConf, defaultEmail string) map[string]api.EventConfig {
+	m := make(map[string]api.EventConfig)
+
+	const (
+		keyEventKey       = "key_event"
+		hashedKeyEventKey = "hashed_key_event"
+	)
+
+	if hconf.HashedKeyEvent != nil {
+		m[hashedKeyEventKey] = *hconf.HashedKeyEvent
+	} else {
+		m[hashedKeyEventKey] = api.EventConfig{Email: defaultEmail}
+	}
+
+	if hconf.KeyEvent != nil {
+		m[keyEventKey] = *hconf.KeyEvent
+	} else {
+		m[keyEventKey] = api.EventConfig{Email: defaultEmail}
+	}
+
+	return m
 }
