@@ -76,6 +76,9 @@ type TykOrg struct {
 
 	// ID corresponds to the organisation ID that is being created.
 	ID string
+
+	// Hybrid includes details of hybrid organisation while using MDCB Control Plane
+	Hybrid *HybridConf
 }
 
 type TykConf struct {
@@ -86,9 +89,6 @@ type TykConf struct {
 
 	// DashboardLicense corresponds to the license key of Tyk Dashboard.
 	DashboardLicense string
-
-	// Hybrid includes details of hybrid organisation while using MDCB Control Plane
-	Hybrid HybridConf
 }
 
 type HybridConf struct {
@@ -99,7 +99,7 @@ type HybridConf struct {
 	KeyEvent *api.EventConfig
 	// HashedKeyEvent corresponds to `hashed_key_event` of the event options which enables key events such as updates
 	// and deletes, to be propagated to the various instance zones.
-	HashedKeyEvent *api.EventConfig
+	HashedKeyEvent *api.EventConfig `json:",omitempty"`
 }
 
 func NewConfig() (*Config, error) {

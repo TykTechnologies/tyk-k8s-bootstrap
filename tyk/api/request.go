@@ -1,9 +1,9 @@
 package api
 
 type EventConfig struct {
-	Webhook string `json:"webhook"`
-	Email   string `json:"email"`
-	Redis   bool   `json:"redis"`
+	Webhook string `json:"webhook,omitempty"`
+	Email   string `json:"email,omitempty"`
+	Redis   bool   `json:"redis,omitempty"`
 }
 
 type CreateOrgReq struct {
@@ -11,7 +11,7 @@ type CreateOrgReq struct {
 	CnameEnabled  bool                   `json:"cname_enabled"`
 	Cname         string                 `json:"cname"`
 	HybridEnabled bool                   `json:"hybrid_enabled"`
-	EventOptions  map[string]EventConfig `json:"event_options"`
+	EventOptions  map[string]EventConfig `json:"event_options,omitempty"`
 }
 
 type ResetPasswordReq struct {
