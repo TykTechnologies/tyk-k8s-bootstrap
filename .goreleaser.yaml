@@ -53,7 +53,7 @@ builds:
   -
     id: "post-fips"
     main: ./cmd/bootstrap-post
-    binary: bootstrapapp-post
+    binary: bootstrapapp-post-fips
     goos:
       - linux
     goarch:
@@ -67,7 +67,7 @@ builds:
   -
     id: "pre-fips"
     main: ./cmd/bootstrap-pre-delete
-    binary: bootstrapapp-pre-delete
+    binary: bootstrapapp-pre-delete-fips
     goos:
       - linux
     goarch:
@@ -81,7 +81,7 @@ builds:
   -
     id: "preinstall-fips"
     main: ./cmd/bootstrap-pre-install
-    binary: bootstrapapp-pre-install
+    binary: bootstrapapp-pre-install-fips
     goos:
       - linux
     goarch:
