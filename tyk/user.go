@@ -108,7 +108,7 @@ func (s *Service) createAdmin() (NeededUserData, error) {
 		return NeededUserData{}, fmt.Errorf("user email already exists for this Org")
 	}
 
-	if res.StatusCode != http.StatusOK {
+	if res.StatusCode < 200 || res.StatusCode > 299 {
 		return NeededUserData{}, fmt.Errorf("create admin user failed with status %d: %s", res.StatusCode, string(bodyBytes))
 	}
 
